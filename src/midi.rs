@@ -1,4 +1,4 @@
-use std::sync::mpsc::Sender;
+use std::{fmt, sync::mpsc::Sender};
 
 use anyhow::{Context, Result, bail};
 use midir::{
@@ -10,6 +10,21 @@ use midir::{
 pub struct PortInfo {
     pub index: usize,
     pub name: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PortSelector {
+    Name(String),
+    Index(usize),
+}
+
+impl fmt::Display for PortSelector {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Name(name) => write!(formatter, "{name}"),
+            Self::Index(index) => write!(formatter, "index:{index}"),
+        }
+    }
 }
 
 pub fn input_ports() -> Result<Vec<PortInfo>> {
@@ -55,6 +70,13 @@ pub fn input_port_present(selector: &str) -> Result<bool> {
         .any(|port| port.name.to_ascii_lowercase().contains(&selector)))
 }
 
+pub fn selected_input_present(selector: &PortSelector) -> Result<bool> {
+    match selector {
+        PortSelector::Name(name) => input_port_present(name),
+        PortSelector::Index(index) => Ok(input_ports()?.get(*index).is_some()),
+    }
+}
+
 pub fn connect_input(
     selector: &str,
     device: u8,
@@ -88,6 +110,54 @@ pub fn connect_input(
         .map_err(|error| anyhow::anyhow!("failed to connect to MIDI input {name}: {error}"))
 }
 
+pub fn connect_selected_input(
+    selector: &PortSelector,
+    device: u8,
+    sender: Sender<TimestampedMidiMessage>,
+) -> Result<MidiInputConnection<()>> {
+    match selector {
+        PortSelector::Name(name) => connect_input(name, device, sender),
+        PortSelector::Index(index) => connect_input_index(*index, device, sender),
+    }
+}
+
+fn connect_input_index(
+    index: usize,
+    device: u8,
+    sender: Sender<TimestampedMidiMessage>,
+) -> Result<MidiInputConnection<()>> {
+    let mut input =
+        MidiInput::new("piu-rise-controller").context("failed to initialize MIDI input")?;
+    input.ignore(Ignore::None);
+    let ports = input.ports();
+    let port = ports
+        .get(index)
+        .with_context(|| format!("MIDI input index {index} does not exist; run `list` again"))?;
+    let name = input
+        .port_name(port)
+        .context("failed to read selected MIDI input port name")?;
+    tracing::info!(port = %name, index, "opening MIDI input");
+    input
+        .connect(
+            port,
+            "piu-rise-controller-input",
+            move |timestamp_us, message, ()| {
+                let owned = TimestampedMidiMessage {
+                    device,
+                    timestamp_us,
+                    bytes: message.to_vec(),
+                };
+                if sender.send(owned).is_err() {
+                    tracing::debug!("MIDI receiver closed");
+                }
+            },
+            (),
+        )
+        .map_err(|error| {
+            anyhow::anyhow!("failed to connect to MIDI input [{index}] {name}: {error}")
+        })
+}
+
 pub fn connect_output(selector: &str) -> Result<MidiOutputConnection> {
     let output =
         MidiOutput::new("piu-rise-controller").context("failed to initialize MIDI output")?;
@@ -100,6 +170,31 @@ pub fn connect_output(selector: &str) -> Result<MidiOutputConnection> {
     output
         .connect(port, "piu-rise-controller-led-output")
         .map_err(|error| anyhow::anyhow!("failed to connect to MIDI output {name}: {error}"))
+}
+
+pub fn connect_selected_output(selector: &PortSelector) -> Result<MidiOutputConnection> {
+    match selector {
+        PortSelector::Name(name) => connect_output(name),
+        PortSelector::Index(index) => connect_output_index(*index),
+    }
+}
+
+fn connect_output_index(index: usize) -> Result<MidiOutputConnection> {
+    let output =
+        MidiOutput::new("piu-rise-controller").context("failed to initialize MIDI output")?;
+    let ports = output.ports();
+    let port = ports
+        .get(index)
+        .with_context(|| format!("MIDI output index {index} does not exist; run `list` again"))?;
+    let name = output
+        .port_name(port)
+        .context("failed to read selected MIDI output port name")?;
+    tracing::info!(port = %name, index, "opening MIDI output");
+    output
+        .connect(port, "piu-rise-controller-led-output")
+        .map_err(|error| {
+            anyhow::anyhow!("failed to connect to MIDI output [{index}] {name}: {error}")
+        })
 }
 
 fn select_output_port<'a>(

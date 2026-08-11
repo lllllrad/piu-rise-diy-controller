@@ -1,7 +1,10 @@
 use anyhow::{Context, Result, ensure};
 use midir::MidiOutputConnection;
 
-use crate::{config::DeviceModel, profile::Profile};
+use crate::{
+    config::DeviceModel,
+    profile::{Profile, Rotation},
+};
 
 // Launchpad Mk2 palette indices. These are sent as ordinary Note On messages,
 // which avoids changing the device layout/mode with model-specific SysEx.
@@ -22,34 +25,50 @@ pub fn render_initial_layout(
     model: DeviceModel,
     profile: Profile,
 ) -> Result<()> {
+    render_initial_layout_for_setup(output, model, profile, 0, false)
+}
+
+pub fn render_initial_layout_for_setup(
+    output: &mut MidiOutputConnection,
+    model: DeviceModel,
+    profile: Profile,
+    device: u8,
+    two_devices: bool,
+) -> Result<()> {
     ensure!(
         model == DeviceModel::Mk2,
         "LED rendering is currently implemented only for Launchpad Mk2"
     );
     for y in 0..8 {
         for x in 0..8 {
-            send_pad(output, x, y, color_at(profile, x, y))?;
+            let rotation = if two_devices && device == 0 {
+                Rotation::Clockwise
+            } else {
+                Rotation::None
+            };
+            let (raw_x, raw_y) = raw_coordinates(x, y, rotation);
+            send_pad(
+                output,
+                raw_x,
+                raw_y,
+                color_at(profile, device, x, y, two_devices),
+            )?;
         }
     }
-    for (offset, color) in [CYAN, CYAN, BLUE, BLUE, GREEN, RED, MAGENTA, WHITE]
-        .into_iter()
-        .enumerate()
-    {
+    let button_colors = if two_devices && device == 0 {
+        [MAGENTA, MAGENTA, RED, RED, ORANGE, YELLOW, GREEN, BLUE]
+    } else {
+        [CYAN, CYAN, BLUE, BLUE, GREEN, RED, MAGENTA, WHITE]
+    };
+    for (offset, color) in button_colors.into_iter().enumerate() {
         send_top_button(
             output,
             u8::try_from(offset).expect("offset is at most 7"),
             color,
         )?;
     }
-    for (offset, color) in [MAGENTA, MAGENTA, RED, RED, ORANGE, YELLOW, GREEN, BLUE]
-        .into_iter()
-        .enumerate()
-    {
-        send_right_button(
-            output,
-            u8::try_from(offset).expect("offset is at most 7"),
-            color,
-        )?;
+    for offset in 0..8 {
+        send_right_button(output, offset, OFF)?;
     }
     Ok(())
 }
@@ -90,29 +109,62 @@ fn send_pad(output: &mut MidiOutputConnection, x: u8, y: u8, color: u8) -> Resul
         .with_context(|| format!("failed to set Mk2 LED at ({x}, {y})"))
 }
 
-fn color_at(profile: Profile, x: u8, y: u8) -> u8 {
+fn raw_coordinates(x: u8, y: u8, rotation: Rotation) -> (u8, u8) {
+    match rotation {
+        Rotation::None => (x, y),
+        Rotation::Clockwise => (y, 7 - x),
+    }
+}
+
+fn color_at(profile: Profile, device: u8, x: u8, y: u8, two_devices: bool) -> u8 {
     if y == 7 {
         return OFF;
     }
     match profile {
-        Profile::FiveKey | Profile::TenKey => {
-            let corner = x <= 2 || x >= 5;
-            let lower = corner && y <= 2;
-            let upper = corner && (4..=6).contains(&y);
-            let yellow = (2..=5).contains(&x) && (2..=4).contains(&y);
-            match (lower, upper, yellow) {
-                (true, false, true) => DARK_BLUE,
-                (true, false, false) => BLUE,
-                (false, true, true) => DARK_RED,
-                (false, true, false) => RED,
-                (false, false, true) => YELLOW,
-                (false, false, false) => OFF,
-                _ => unreachable!("upper and lower panel regions do not overlap"),
-            }
-        }
+        Profile::FiveKey | Profile::TenKey => five_key_color_at(x, y),
+        Profile::SixKey if two_devices => six_key_color_at(device, x, y),
         Profile::SixKey => {
             [RED, ORANGE, YELLOW, YELLOW, GREEN, GREEN, BLUE, MAGENTA][usize::from(x)]
         }
+    }
+}
+
+fn five_key_color_at(x: u8, y: u8) -> u8 {
+    let corner = x <= 2 || x >= 5;
+    let lower = corner && y <= 2;
+    let upper = corner && (4..=6).contains(&y);
+    let yellow = (2..=5).contains(&x) && (2..=4).contains(&y);
+    match (lower, upper, yellow) {
+        (true, false, true) => DARK_BLUE,
+        (true, false, false) => BLUE,
+        (false, true, true) => DARK_RED,
+        (false, true, false) => RED,
+        (false, false, true) => YELLOW,
+        (false, false, false) => OFF,
+        _ => unreachable!("upper and lower panel regions do not overlap"),
+    }
+}
+
+fn six_key_color_at(device: u8, x: u8, y: u8) -> u8 {
+    let center = (2..=5).contains(&x) && (2..=4).contains(&y);
+    let red = if device == 0 {
+        x >= 5 && (4..=6).contains(&y)
+    } else {
+        x <= 2 && (4..=6).contains(&y)
+    };
+    let blue = if device == 0 {
+        x >= 5 && y <= 2
+    } else {
+        x <= 2 && y <= 2
+    };
+    match (red, blue, center) {
+        (true, false, true) => DARK_RED,
+        (true, false, false) => RED,
+        (false, true, true) => DARK_BLUE,
+        (false, true, false) => BLUE,
+        (false, false, true) => YELLOW,
+        (false, false, false) => OFF,
+        _ => unreachable!("red and blue panel regions do not overlap"),
     }
 }
 
@@ -123,12 +175,12 @@ mod tests {
 
     #[test]
     fn five_key_colors_include_overlap_and_gaps() {
-        assert_eq!(color_at(Profile::FiveKey, 0, 0), BLUE);
-        assert_eq!(color_at(Profile::FiveKey, 0, 6), RED);
-        assert_eq!(color_at(Profile::FiveKey, 3, 3), YELLOW);
-        assert_eq!(color_at(Profile::FiveKey, 2, 2), DARK_BLUE);
-        assert_eq!(color_at(Profile::FiveKey, 2, 4), DARK_RED);
-        assert_eq!(color_at(Profile::FiveKey, 3, 1), OFF);
-        assert_eq!(color_at(Profile::FiveKey, 3, 7), OFF);
+        assert_eq!(color_at(Profile::FiveKey, 0, 0, 0, false), BLUE);
+        assert_eq!(color_at(Profile::FiveKey, 0, 0, 6, false), RED);
+        assert_eq!(color_at(Profile::FiveKey, 0, 3, 3, false), YELLOW);
+        assert_eq!(color_at(Profile::FiveKey, 0, 2, 2, false), DARK_BLUE);
+        assert_eq!(color_at(Profile::FiveKey, 0, 2, 4, false), DARK_RED);
+        assert_eq!(color_at(Profile::FiveKey, 0, 3, 1, false), OFF);
+        assert_eq!(color_at(Profile::FiveKey, 0, 3, 7, false), OFF);
     }
 }

@@ -48,14 +48,14 @@ mode after every reconnect.
 Choose one example:
 
 ```powershell
-piu-rise-controller write-default-config --model original --profile five-key
-piu-rise-controller write-default-config --model mk2 --profile six-key --force
-piu-rise-controller write-default-config --model mk2 --profile ten-key --force
+piu-rise-controller write-default-config --model original
+piu-rise-controller write-default-config --model mk2 --force
+piu-rise-controller write-default-config --model mk2 --two-devices --force
 ```
 
 Run `piu-rise-controller doctor` to print the exact config and log paths. Edit
 `device.input_port` so it uniquely matches the MIDI input port. Review every
-key and binding before enabling Windows output. For `ten-key`, also set
+key and binding before enabling Windows output. For the two-device layout, also set
 `device.input_port_right`; bindings with `device = 0` are the left side and
 `device = 1` are the right side. The example P2 keys are `Z X C V B` and must
 be matched in RISE key settings.
@@ -64,11 +64,14 @@ be matched in RISE key settings.
 
 ### Launchpad Mk2 five-key layout
 
-With `--model mk2 --profile five-key`, the physical top grid row is unused.
+With one configured input and `--model mk2`, the physical top grid row is unused.
 The eight round buttons above it provide `W`, `S`, `A`, `D`, `Enter`, `Esc`,
 `Space`, and `Tab`, from left to right.
-The eight round buttons on the right provide `Q`, `E`, `F1`, `F2`, `F3`, `F5`,
-`F6`, and `F7`, from bottom to top. Both button groups are illuminated.
+The Mk2 right-side buttons are not used. In a two-device 6K or 10K setup, the
+right upright device's top buttons provide the primary UI keys. The left device
+is rotated 90 degrees counter-clockwise; its original top buttons (physically
+on the left after rotation) provide `Q`, `E`, `F1`, `F2`, `F3`, `F5`, `F6`, and
+`F7`.
 The other seven rows contain two red upper 3-by-3 panels, two blue lower
 3-by-3 panels, and a yellow 3-row-by-4-column center panel. Shared upper cells
 are dark red and shared lower cells are dark blue. Each shared cell activates
@@ -81,11 +84,27 @@ on a normal Ctrl+C shutdown.
 This MIDI address and palette behavior is `Unverified` until it is checked on
 the owner's Launchpad Mk2. `--dry-run` deliberately sends no LED output.
 
+### Two-device 10-panel layout
+
+Pass the upright right/main device with `--input`/`--input-index` and the
+counter-clockwise-rotated additional device with `--input-left`/
+`--input-left-index`.
+Providing a second input always selects the 10-panel layout; it may also be
+used for RISE 6K by editing the ten output key assignments. The left device
+uses the full P1 five-panel layout and the right uses the full P2 layout.
+A clockwise coordinate compensation is applied to both input and LED addresses
+for the physically counter-clockwise left device.
+
+When identical devices have identical names, use the indices printed by
+`list`. Main and left LED outputs can likewise be selected with
+`--output-index` and `--output-left-index`. Indices can change after reconnecting USB, so inspect
+`list` before launch.
+
 Dry-run receives MIDI and exercises all press/reference/release state without
 injecting keys:
 
 ```powershell
-piu-rise-controller -vv run --input "Launchpad" --model original --profile five-key --dry-run
+piu-rise-controller -vv run --input "Launchpad" --model original --dry-run
 ```
 
 Check taps, holds, two pads belonging to the same logical panel, chords, and
@@ -98,7 +117,7 @@ administrator:
 
 ```powershell
 piu-rise-controller output-test --key F --hold-ms 100
-piu-rise-controller run --input "Launchpad" --model original --profile five-key
+piu-rise-controller run --input "Launchpad" --model original
 ```
 
 Keep the console accessible. Ctrl+C requests Release All before shutdown. Do

@@ -19,29 +19,49 @@ pub enum Profile {
 
 pub type Bindings = HashMap<PhysicalControl, Vec<LogicalAction>>;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Rotation {
+    None,
+    Clockwise,
+}
+
 pub fn default_bindings(model: DeviceModel, profile: Profile) -> Bindings {
     default_bindings_for_device(model, profile, 0)
 }
 
 pub fn default_bindings_for_device(model: DeviceModel, profile: Profile, device: u8) -> Bindings {
+    default_bindings_for_setup(model, profile, device, false)
+}
+
+pub fn default_bindings_for_setup(
+    model: DeviceModel,
+    profile: Profile,
+    device: u8,
+    two_devices: bool,
+) -> Bindings {
     let mut bindings = HashMap::new();
+    let rotation = if two_devices && device == 0 {
+        Rotation::Clockwise
+    } else {
+        Rotation::None
+    };
     for y in 0..7 {
         for x in 0..8 {
-            let actions = actions_at(profile, device, x, y);
+            let actions = actions_at(profile, device, x, y, two_devices);
             if actions.is_empty() {
                 continue;
             }
-            if let Some(mut control) = grid_control(model, x, y) {
+            if let Some(mut control) = grid_control_rotated(model, x, y, rotation) {
                 control.device = device;
                 bindings.insert(control, actions);
             }
         }
     }
-    add_ui_bindings(&mut bindings, model, device);
+    add_ui_bindings(&mut bindings, model, device, two_devices);
     bindings
 }
 
-fn add_ui_bindings(bindings: &mut Bindings, model: DeviceModel, device: u8) {
+fn add_ui_bindings(bindings: &mut Bindings, model: DeviceModel, device: u8, two_devices: bool) {
     use LogicalAction::{
         UiBack, UiChannelNext, UiChannelPrev, UiCommand, UiConfirm, UiDown, UiFavorite,
         UiHighlight, UiLeaderboard, UiLeft, UiMenu, UiMultiplay, UiRight, UiSort, UiTypeToggle,
@@ -62,7 +82,11 @@ fn add_ui_bindings(bindings: &mut Bindings, model: DeviceModel, device: u8) {
         UiCommand,
         UiTypeToggle,
     ];
+    let add_primary = !two_devices || device == 1;
     for (offset, action) in primary.into_iter().enumerate() {
+        if !add_primary {
+            break;
+        }
         let offset = u8::try_from(offset).expect("offset is at most 7");
         let primary_base = if model == DeviceModel::Modern {
             91
@@ -91,6 +115,21 @@ fn add_ui_bindings(bindings: &mut Bindings, model: DeviceModel, device: u8) {
         UiFavorite,
     ];
     for (y, action) in secondary.into_iter().enumerate() {
+        if model == DeviceModel::Mk2 {
+            if !two_devices || device != 0 {
+                break;
+            }
+            bindings.insert(
+                PhysicalControl {
+                    device,
+                    kind: MessageKind::ControlChange,
+                    channel: 0,
+                    number: 104 + u8::try_from(y).expect("row is at most 7"),
+                },
+                vec![action],
+            );
+            continue;
+        }
         let y = u8::try_from(y).expect("row is at most 7");
         let control = match model {
             DeviceModel::Original | DeviceModel::LaunchpadS | DeviceModel::MiniLegacy => {
@@ -113,13 +152,14 @@ fn add_ui_bindings(bindings: &mut Bindings, model: DeviceModel, device: u8) {
     }
 }
 
-fn actions_at(profile: Profile, device: u8, x: u8, y: u8) -> Vec<LogicalAction> {
+fn actions_at(profile: Profile, device: u8, x: u8, y: u8, two_devices: bool) -> Vec<LogicalAction> {
     use LogicalAction::{
         Lane1, Lane2, Lane3, Lane4, Lane5, Lane6, P1Center, P1DownLeft, P1DownRight, P1UpLeft,
         P1UpRight, P2Center, P2DownLeft, P2DownRight, P2UpLeft, P2UpRight,
     };
     match profile {
         Profile::FiveKey => five_key_actions_at(x, y),
+        Profile::SixKey if two_devices => six_key_spatial_actions_at(device, x, y),
         Profile::SixKey => match x {
             0 => vec![Lane1],
             1 => vec![Lane2],
@@ -150,6 +190,39 @@ fn actions_at(profile: Profile, device: u8, x: u8, y: u8) -> Vec<LogicalAction> 
     }
 }
 
+fn six_key_spatial_actions_at(device: u8, x: u8, y: u8) -> Vec<LogicalAction> {
+    use LogicalAction::{Lane1, Lane2, Lane3, Lane4, Lane5, Lane6};
+
+    let mut actions = Vec::with_capacity(2);
+    let center = (2..=5).contains(&x) && (2..=4).contains(&y);
+    let upper_left = x <= 2 && (4..=6).contains(&y);
+    let upper_right = x >= 5 && (4..=6).contains(&y);
+    let lower_left = x <= 2 && y <= 2;
+    let lower_right = x >= 5 && y <= 2;
+    if device == 0 {
+        if upper_right {
+            actions.push(Lane2);
+        }
+        if lower_right {
+            actions.push(Lane3);
+        }
+        if center {
+            actions.push(Lane1);
+        }
+    } else {
+        if lower_left {
+            actions.push(Lane4);
+        }
+        if upper_left {
+            actions.push(Lane5);
+        }
+        if center {
+            actions.push(Lane6);
+        }
+    }
+    actions
+}
+
 fn five_key_actions_at(x: u8, y: u8) -> Vec<LogicalAction> {
     use LogicalAction::{P1Center, P1DownLeft, P1DownRight, P1UpLeft, P1UpRight};
 
@@ -170,9 +243,22 @@ fn five_key_actions_at(x: u8, y: u8) -> Vec<LogicalAction> {
 }
 
 pub fn grid_control(model: DeviceModel, x: u8, y: u8) -> Option<PhysicalControl> {
+    grid_control_rotated(model, x, y, Rotation::None)
+}
+
+pub fn grid_control_rotated(
+    model: DeviceModel,
+    x: u8,
+    y: u8,
+    rotation: Rotation,
+) -> Option<PhysicalControl> {
     if x > 7 || y > 7 {
         return None;
     }
+    let (x, y) = match rotation {
+        Rotation::None => (x, y),
+        Rotation::Clockwise => (y, 7 - x),
+    };
     let number = match model {
         DeviceModel::Original | DeviceModel::LaunchpadS | DeviceModel::MiniLegacy => {
             (7 - y).checked_mul(16)?.checked_add(x)?
@@ -192,7 +278,10 @@ pub fn grid_control(model: DeviceModel, x: u8, y: u8) -> Option<PhysicalControl>
 mod tests {
     use crate::{action::LogicalAction, config::DeviceModel};
 
-    use super::{Profile, default_bindings, default_bindings_for_device, grid_control};
+    use super::{
+        Profile, Rotation, default_bindings, default_bindings_for_device,
+        default_bindings_for_setup, grid_control, grid_control_rotated,
+    };
 
     #[test]
     fn original_and_mk2_use_different_grid_addresses() {
@@ -204,9 +293,25 @@ mod tests {
     }
 
     #[test]
+    fn clockwise_compensation_maps_left_device_corners_to_mk2_notes() {
+        assert_eq!(
+            grid_control_rotated(DeviceModel::Mk2, 0, 0, Rotation::Clockwise)
+                .unwrap()
+                .number,
+            81
+        );
+        assert_eq!(
+            grid_control_rotated(DeviceModel::Mk2, 7, 0, Rotation::Clockwise)
+                .unwrap()
+                .number,
+            11
+        );
+    }
+
+    #[test]
     fn five_key_center_maps_multiple_cells_to_one_action() {
         let bindings = default_bindings(DeviceModel::Original, Profile::FiveKey);
-        for (x, y) in [(2, 2), (5, 4)] {
+        for (x, y) in [(3, 2), (4, 4)] {
             let control = grid_control(DeviceModel::Original, x, y).unwrap();
             assert_eq!(bindings[&control], vec![LogicalAction::P1Center]);
         }
@@ -253,11 +358,11 @@ mod tests {
     }
 
     #[test]
-    fn mk2_lower_right_buttons_are_q_and_e() {
-        let bindings = default_bindings(DeviceModel::Mk2, Profile::FiveKey);
+    fn mk2_left_top_buttons_are_q_and_e_with_two_devices() {
+        let bindings = default_bindings_for_setup(DeviceModel::Mk2, Profile::SixKey, 0, true);
         for (number, action) in [
-            (19, LogicalAction::UiChannelPrev),
-            (29, LogicalAction::UiChannelNext),
+            (104, LogicalAction::UiChannelPrev),
+            (105, LogicalAction::UiChannelNext),
         ] {
             let control = super::PhysicalControl {
                 device: 0,
@@ -267,6 +372,37 @@ mod tests {
             };
             assert_eq!(bindings[&control], vec![action]);
         }
+    }
+
+    #[test]
+    fn two_device_six_key_uses_only_three_spatial_panels_per_device() {
+        let left = default_bindings_for_setup(DeviceModel::Mk2, Profile::SixKey, 0, true);
+        let right = default_bindings_for_setup(DeviceModel::Mk2, Profile::SixKey, 1, true);
+
+        for (x, y, action) in [
+            (3, 3, LogicalAction::Lane1),
+            (7, 6, LogicalAction::Lane2),
+            (7, 0, LogicalAction::Lane3),
+        ] {
+            let mut control =
+                grid_control_rotated(DeviceModel::Mk2, x, y, Rotation::Clockwise).unwrap();
+            control.device = 0;
+            assert_eq!(left[&control], vec![action]);
+        }
+        for (x, y, action) in [
+            (0, 0, LogicalAction::Lane4),
+            (0, 6, LogicalAction::Lane5),
+            (3, 3, LogicalAction::Lane6),
+        ] {
+            let mut control = grid_control(DeviceModel::Mk2, x, y).unwrap();
+            control.device = 1;
+            assert_eq!(right[&control], vec![action]);
+        }
+
+        let mut unused_left =
+            grid_control_rotated(DeviceModel::Mk2, 0, 0, Rotation::Clockwise).unwrap();
+        unused_left.device = 0;
+        assert!(!left.contains_key(&unused_left));
     }
 
     #[test]

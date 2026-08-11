@@ -48,15 +48,15 @@ standalone 레이아웃을 선택해야 할 수 있습니다. 정확한 모델�
 다음 중 하나를 선택합니다.
 
 ```powershell
-piu-rise-controller write-default-config --model original --profile five-key
-piu-rise-controller write-default-config --model mk2 --profile six-key --force
-piu-rise-controller write-default-config --model mk2 --profile ten-key --force
+piu-rise-controller write-default-config --model original
+piu-rise-controller write-default-config --model mk2 --force
+piu-rise-controller write-default-config --model mk2 --two-devices --force
 ```
 
 `piu-rise-controller doctor`로 정확한 설정 및 로그 경로를 확인합니다.
 `device.input_port`를 MIDI 입력 포트 하나만 식별하는 값으로 수정하고,
 Windows 출력을 활성화하기 전에 모든 키와 binding을 검토합니다.
-`ten-key`에서는 `device.input_port_right`도 설정합니다. `device = 0` binding은
+장치 두 대를 쓰면 `device.input_port_right`도 설정합니다. `device = 0` binding은
 왼쪽, `device = 1` binding은 오른쪽 장치입니다. P2 예제 키 `Z X C V B`는
 RISE 키 설정에서도 동일하게 연결해야 합니다.
 
@@ -64,11 +64,13 @@ RISE 키 설정에서도 동일하게 연결해야 합니다.
 
 ### Launchpad Mk2 5키 배치
 
-`--model mk2 --profile five-key`에서는 물리적인 8×8 그리드의 맨 위 행을 사용하지 않습니다.
+입력 한 대와 `--model mk2`를 사용하면 물리적인 8×8 그리드의 맨 위 행을 사용하지 않습니다.
 그보다 위에 있는 원형 버튼 8개를 왼쪽부터 `W`, `S`, `A`, `D`, `Enter`, `Esc`, `Space`,
 `Tab`에 사용합니다.
-오른쪽 원형 버튼 8개는 아래부터 위로 `Q`, `E`, `F1`, `F2`, `F3`, `F5`, `F6`, `F7`에
-사용하며, 위쪽과 오른쪽 버튼 LED를 모두 켭니다. 나머지 7개 행에는
+Mk2 오른쪽 측면 버튼은 사용하지 않습니다. 6K 또는 10K에서 장치 두 대를 사용하면 정상 방향인
+오른쪽 메인 장치의 상단 버튼이 기본 UI 키를 담당합니다. 왼쪽 장치는 반시계 방향으로 90도
+회전하며, 회전 후 물리적으로 왼쪽에 오는 원래 상단 버튼을 `Q`, `E`, `F1`, `F2`, `F3`,
+`F5`, `F6`, `F7`에 사용합니다. 나머지 7개 행에는
 빨간색 3×3 위쪽 발판 두 개, 파란색 3×3 아래쪽 발판 두 개와 노란색 세로 3행×가로 4열
 중앙 발판을 배치합니다. 위쪽 겹침은 어두운 빨간색, 아래쪽 겹침은 어두운 파란색입니다.
 겹침 셀은 해당 방향 발판과 중앙 발판을 동시에 누르고 동시에 뗍니다. 실제 출력 모드가 시작되면
@@ -78,11 +80,24 @@ RISE 키 설정에서도 동일하게 연결해야 합니다.
 이 MIDI 주소와 팔레트 동작은 소유자의 Launchpad Mk2에서 확인하기 전까지 `Unverified`입니다.
 `--dry-run`은 의도적으로 LED 출력을 보내지 않습니다.
 
+### 장치 두 대를 사용하는 10패널 배치
+
+정상 방향인 오른쪽 메인 장치는 `--input`/`--input-index`, 반시계 방향으로 회전한 추가
+장치는 `--input-left`/`--input-left-index`로 지정합니다. 왼쪽 입력을 지정하면 항상
+10패널 배치를 사용합니다. RISE 6K에서도 열 개 출력 키 설정을 필요에 맞게 수정해 이 배치를
+그대로 사용할 수 있습니다. 왼쪽 장치는 P1 5패널 전체를, 오른쪽 장치는 P2 5패널 전체를
+사용합니다. 물리적으로 반시계 방향인 왼쪽 장치의 입력과 LED 주소에는 시계 방향 보정 변환을
+적용합니다.
+
+동일 장치의 포트 이름이 같으면 `list`가 보여 주는 번호를 사용합니다. LED 출력도
+메인 출력은 `--output-index`, 왼쪽 출력은 `--output-left-index`로 선택할 수 있습니다. USB를 다시 연결하면 번호가
+바뀔 수 있으므로 실행 전에 `list`를 다시 확인하십시오.
+
 dry-run은 MIDI 입력과 press/reference/release 상태를 모두 처리하지만
 Windows 키는 전송하지 않습니다.
 
 ```powershell
-piu-rise-controller -vv run --input "Launchpad" --model original --profile five-key --dry-run
+piu-rise-controller -vv run --input "Launchpad" --model original --dry-run
 ```
 
 짧게 누르기, 길게 누르기, 같은 논리 패널에 속한 패드 두 개, 동시 입력,
@@ -96,7 +111,7 @@ Ctrl+C 종료를 확인합니다. 로그에서 모든 press에 대응하는 rele
 
 ```powershell
 piu-rise-controller output-test --key F --hold-ms 100
-piu-rise-controller run --input "Launchpad" --model original --profile five-key
+piu-rise-controller run --input "Launchpad" --model original
 ```
 
 콘솔에 접근할 수 있는 상태를 유지합니다. Ctrl+C는 종료 전에 Release All을

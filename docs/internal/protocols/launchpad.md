@@ -63,6 +63,18 @@ uses a darker shade of that corner's red or blue rather than a mixed color.
 Mk2 palette Note On and CC output is cleared on normal
 shutdown. Runtime pressed-state animation is not implemented.
 
+For the supported two-device setup, device 0 is the physical left Launchpad
+rotated 90 degrees counter-clockwise and device 1 is the upright right/main
+Launchpad. A clockwise compensation transform is applied to device 0 grid input
+and LED addresses. Mk2 side CCs are unused. Device 1 top CC 104..111 owns
+the primary UI actions, while device 0 top CC 104..111 owns the secondary UI
+actions and appears on the physical left edge after rotation.
+
+Runtime layout selection is inferred from device count rather than a CLI
+profile: one input uses the five-panel layout, while two inputs use all five
+spatial panels on each device. The ten-panel layout can be assigned to RISE 6K
+through output-key configuration without changing the physical layout.
+
 ## Required normalized events
 
 ```text

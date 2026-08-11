@@ -14,6 +14,7 @@ Last updated: 2026-08-12
 | CLI help and config writer | Passed | Linux command dispatch without MIDI hardware |
 | Windows MSVC release cross-build | Passed | Rust 1.97.1, `cargo-xwin` 0.23.0, static CRT, embedded `requireAdministrator` manifest |
 | KVM/QEMU Windows boundary run | Passed: 19 tests | QEMU 10.2.1 and Windows 11 Enterprise Evaluation 25H2 WinPE; elevated CLI, MIDI enumeration with no attached device, Original 5K config write/reload, Release All, and `SendInput` press/release |
+| Windows development-host library tests | Passed: 25 tests | Two-device spatial selection, clockwise compensation for a counter-clockwise physical device, Mk2 UI relocation, overlap actions, config, and output state; no MIDI hardware attached |
 
 The managed Linux execution image lacked a C compiler, ALSA development
 metadata, and a normal linker driver. The test run used only temporary files
@@ -38,6 +39,8 @@ hardware, Launchpad, or game.
   PE. Desktop focus behavior, UAC prompting, and the console control handler
   remain Unverified.
 - MIDI enumeration and hot-unplug polling with a physical device: Unverified.
+- Two-Mk2 indexed input/output pairing, counter-clockwise physical placement,
+  and the ten-panel layout: Unverified; automated behavior passes up to the MIDI boundary.
 - Original/Mk1 or Mk2 address assumptions on the owner's device: Unverified.
 - PUMP IT UP RISE menu/gameplay behavior: Unverified; owner test required.
 - Launchpad Mk2 palette LED output and the revised 5K grid layout compile and

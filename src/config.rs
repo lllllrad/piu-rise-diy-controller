@@ -31,6 +31,7 @@ pub struct DeviceConfig {
     pub input_port: Option<String>,
     pub input_port_right: Option<String>,
     pub output_port: Option<String>,
+    pub output_port_right: Option<String>,
     #[serde(default)]
     pub model: DeviceModel,
     pub model_right: Option<DeviceModel>,
@@ -201,8 +202,6 @@ fn default_keys() -> BTreeMap<LogicalAction, String> {
 
 #[cfg(test)]
 mod tests {
-    use tempfile::tempdir;
-
     use crate::{
         action::LogicalAction,
         event::{MessageKind, PhysicalControl},
@@ -212,13 +211,18 @@ mod tests {
 
     #[test]
     fn default_configuration_round_trips() {
-        let directory = tempdir().unwrap();
-        let path = directory.path().join("config.toml");
+        let directory = std::env::temp_dir().join(format!(
+            "piu-rise-controller-config-test-{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("config.toml");
         let expected = AppConfig::default();
         expected.save(&path).unwrap();
         let actual = AppConfig::load(&path).unwrap();
         assert_eq!(actual.schema_version, expected.schema_version);
         assert_eq!(actual.keys, expected.keys);
+        std::fs::remove_dir_all(directory).unwrap();
     }
 
     #[test]

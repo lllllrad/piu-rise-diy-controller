@@ -14,14 +14,14 @@ use piu_rise_controller::{
     config::{AppConfig, DeviceModel},
     engine::MappingEngine,
     event::decode_channel_message,
-    led::{clear_grid, render_initial_layout},
+    led::{clear_grid, render_initial_layout_for_setup},
     midi::{
-        TimestampedMidiMessage, connect_input, connect_output, input_port_present, input_ports,
-        output_ports,
+        PortSelector, TimestampedMidiMessage, connect_selected_input, connect_selected_output,
+        input_ports, output_ports, selected_input_present,
     },
     output::{OutputBackend, TraceOutput},
     platform::{KeyboardOutput, install_stop_handler, is_elevated, stop_requested},
-    profile::{Profile, default_bindings, default_bindings_for_device},
+    profile::{Profile, default_bindings_for_setup},
 };
 use tracing_subscriber::{EnvFilter, Layer, layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -49,36 +49,55 @@ enum Command {
     /// Observe raw MIDI messages without sending keys or device commands.
     Monitor {
         /// Case-insensitive substring selecting exactly one MIDI input port.
+        #[arg(long, conflicts_with = "input_index")]
+        input: Option<String>,
+        /// MIDI input index printed by `list`.
         #[arg(long)]
-        input: String,
+        input_index: Option<usize>,
     },
     /// Run the controller mapper until Ctrl+C.
     Run {
-        /// Case-insensitive MIDI input selector; overrides the config file.
-        #[arg(long)]
+        /// MIDI input selector for the right/main device.
+        #[arg(long, conflicts_with = "input_index")]
         input: Option<String>,
-        /// Second MIDI input selector for the right side of a 10K profile.
+        /// MIDI input index for the right/main device.
         #[arg(long)]
-        input_right: Option<String>,
-        /// Legacy protocol/address family.
+        input_index: Option<usize>,
+        /// MIDI input selector for the optional counter-clockwise left device.
+        #[arg(long, conflicts_with = "input_left_index")]
+        input_left: Option<String>,
+        /// MIDI input index for the optional counter-clockwise left device.
+        #[arg(long)]
+        input_left_index: Option<usize>,
+        /// MIDI output selector for the right/main device LEDs.
+        #[arg(long, conflicts_with = "output_index")]
+        output: Option<String>,
+        /// MIDI output index for the right/main device LEDs.
+        #[arg(long)]
+        output_index: Option<usize>,
+        /// MIDI output selector for the optional left device LEDs.
+        #[arg(long, conflicts_with = "output_left_index")]
+        output_left: Option<String>,
+        /// MIDI output index for the optional left device LEDs.
+        #[arg(long)]
+        output_left_index: Option<usize>,
+        /// Model for the right/main device.
         #[arg(long)]
         model: Option<DeviceModel>,
-        /// Model for the right device; defaults to the left model.
+        /// Model for the optional left device; defaults to the main model.
         #[arg(long)]
-        model_right: Option<DeviceModel>,
-        /// Logical gameplay layout.
-        #[arg(long, default_value = "five-key")]
-        profile: Profile,
+        model_left: Option<DeviceModel>,
         /// Log output transitions without injecting Windows input.
         #[arg(long)]
         dry_run: bool,
     },
-    /// Write an editable configuration with bindings for one model/profile.
+    /// Write an editable configuration with a 5K or two-device 10K layout.
     WriteDefaultConfig {
         #[arg(long)]
         model: DeviceModel,
-        #[arg(long, default_value = "five-key")]
-        profile: Profile,
+        /// Generate the two-device 10K layout instead of the one-device 5K layout.
+        #[arg(long)]
+        two_devices: bool,
         /// Replace an existing file.
         #[arg(long)]
         force: bool,
@@ -97,6 +116,20 @@ enum Command {
 struct LoggingGuard {
     _file_guard: tracing_appender::non_blocking::WorkerGuard,
     log_dir: PathBuf,
+}
+
+struct RunOptions {
+    input: Option<String>,
+    input_index: Option<usize>,
+    input_left: Option<String>,
+    input_left_index: Option<usize>,
+    output: Option<String>,
+    output_index: Option<usize>,
+    output_left: Option<String>,
+    output_left_index: Option<usize>,
+    model: Option<DeviceModel>,
+    model_left: Option<DeviceModel>,
+    dry_run: bool,
 }
 
 fn main() {
@@ -122,28 +155,44 @@ fn real_main() -> Result<()> {
     let result = match cli.command {
         Command::List => list_midi_ports(),
         Command::Doctor => doctor(&config_path, &logging.log_dir),
-        Command::Monitor { input } => monitor(&input),
+        Command::Monitor { input, input_index } => monitor(
+            select_cli_port(input, input_index, None, "MIDI input")?
+                .as_ref()
+                .context("pass --input or --input-index")?,
+        ),
         Command::Run {
             input,
-            input_right,
+            input_index,
+            input_left,
+            input_left_index,
+            output,
+            output_index,
+            output_left,
+            output_left_index,
             model,
-            model_right,
-            profile,
+            model_left,
             dry_run,
         } => run_controller(
             &config_path,
-            input,
-            input_right,
-            model,
-            model_right,
-            profile,
-            dry_run,
+            RunOptions {
+                input,
+                input_index,
+                input_left,
+                input_left_index,
+                output,
+                output_index,
+                output_left,
+                output_left_index,
+                model,
+                model_left,
+                dry_run,
+            },
         ),
         Command::WriteDefaultConfig {
             model,
-            profile,
+            two_devices,
             force,
-        } => write_default_config(&config_path, model, profile, force),
+        } => write_default_config(&config_path, model, two_devices, force),
         Command::OutputTest { key, hold_ms } => output_test(key, hold_ms),
         Command::ReleaseAll => release_all_outputs(&config_path),
     };
@@ -231,10 +280,26 @@ fn doctor(config_path: &Path, log_dir: &Path) -> Result<()> {
     list_midi_ports()
 }
 
-fn monitor(selector: &str) -> Result<()> {
+fn select_cli_port(
+    name: Option<String>,
+    index: Option<usize>,
+    configured_name: Option<String>,
+    label: &str,
+) -> Result<Option<PortSelector>> {
+    ensure!(
+        name.is_none() || index.is_none(),
+        "{label} cannot use both a name and an index"
+    );
+    Ok(index
+        .map(PortSelector::Index)
+        .or_else(|| name.map(PortSelector::Name))
+        .or_else(|| configured_name.map(PortSelector::Name)))
+}
+
+fn monitor(selector: &PortSelector) -> Result<()> {
     install_stop_handler()?;
     let (sender, receiver) = mpsc::channel();
-    let _connection = connect_input(selector, 0, sender)?;
+    let _connection = connect_selected_input(selector, 0, sender)?;
     println!("Monitoring MIDI input. Press Ctrl+C to stop.");
     while !stop_requested() {
         if let Ok(message) = receiver.recv_timeout(Duration::from_millis(100)) {
@@ -272,57 +337,101 @@ fn print_midi(message: &TimestampedMidiMessage) {
     }
 }
 
-fn run_controller(
-    config_path: &Path,
-    input_override: Option<String>,
-    input_right_override: Option<String>,
-    model_override: Option<DeviceModel>,
-    model_right_override: Option<DeviceModel>,
-    profile: Profile,
-    dry_run: bool,
-) -> Result<()> {
+fn run_controller(config_path: &Path, options: RunOptions) -> Result<()> {
+    let RunOptions {
+        input: input_override,
+        input_index,
+        input_left: input_left_override,
+        input_left_index,
+        output: output_override,
+        output_index,
+        output_left: output_left_override,
+        output_left_index,
+        model: model_override,
+        model_left: model_left_override,
+        dry_run,
+    } = options;
     let config = if config_path.is_file() {
         AppConfig::load(config_path)?
     } else {
         tracing::warn!(path = %config_path.display(), "configuration file not found; using defaults");
         AppConfig::default()
     };
-    let selector = input_override
-        .or_else(|| config.device.input_port.clone())
-        .context("MIDI input is required; pass --input or set device.input_port")?;
-    let output_selector = config
+    let configured_main_input = config
         .device
-        .output_port
+        .input_port_right
         .clone()
-        .unwrap_or_else(|| selector.clone());
-    let model = model_override.unwrap_or(config.device.model);
+        .or_else(|| config.device.input_port.clone());
+    let configured_left_input = config
+        .device
+        .input_port_right
+        .as_ref()
+        .and(config.device.input_port.clone());
+    let main_selector = select_cli_port(
+        input_override,
+        input_index,
+        configured_main_input,
+        "right/main MIDI input",
+    )?
+    .context("MIDI input is required; pass --input or set device.input_port")?;
+    let configured_main_output = config
+        .device
+        .output_port_right
+        .clone()
+        .or_else(|| config.device.output_port.clone());
+    let configured_left_output = config
+        .device
+        .output_port_right
+        .as_ref()
+        .and(config.device.output_port.clone());
+    let main_output_selector = select_cli_port(
+        output_override,
+        output_index,
+        configured_main_output,
+        "right/main MIDI output",
+    )?
+    .unwrap_or_else(|| main_selector.clone());
+    let model_main = model_override
+        .or(config.device.model_right)
+        .unwrap_or(config.device.model);
     ensure!(
-        model != DeviceModel::Auto,
+        model_main != DeviceModel::Auto,
         "device model is unknown; use `monitor` first, then pass --model"
     );
-    let right_selector = input_right_override.or_else(|| config.device.input_port_right.clone());
-    let model_right = model_right_override
-        .or(config.device.model_right)
-        .unwrap_or(model);
-    if profile == Profile::TenKey {
+    let left_selector = select_cli_port(
+        input_left_override,
+        input_left_index,
+        configured_left_input,
+        "left MIDI input",
+    )?;
+    let left_output_selector = select_cli_port(
+        output_left_override,
+        output_left_index,
+        configured_left_output,
+        "left MIDI output",
+    )?
+    .or_else(|| left_selector.clone());
+    let model_left = model_left_override.unwrap_or(config.device.model);
+    if left_selector.is_some() {
         ensure!(
-            right_selector.is_some(),
-            "ten-key requires --input-right or device.input_port_right"
-        );
-        ensure!(
-            model_right != DeviceModel::Auto,
-            "right device model is unknown"
-        );
-    } else {
-        ensure!(
-            right_selector.is_none(),
-            "--input-right is only valid with ten-key"
+            model_left != DeviceModel::Auto,
+            "left device model is unknown"
         );
     }
+    let two_devices = left_selector.is_some();
+    let profile = if two_devices {
+        Profile::TenKey
+    } else {
+        Profile::FiveKey
+    };
     let bindings = if config.bindings.is_empty() {
-        let mut bindings = default_bindings(model, profile);
-        if profile == Profile::TenKey {
-            bindings.extend(default_bindings_for_device(model_right, profile, 1));
+        let mut bindings = if two_devices {
+            default_bindings_for_setup(model_left, profile, 0, true)
+        } else {
+            default_bindings_for_setup(model_main, profile, 0, false)
+        };
+        if two_devices {
+            bindings.extend(default_bindings_for_setup(model_main, profile, 1, true));
         }
         bindings
     } else {
@@ -332,23 +441,24 @@ fn run_controller(
     let keys = config.parsed_keys()?;
 
     tracing::info!(
-        input = %selector,
-        ?model,
-        ?model_right,
+        input = %main_selector,
+        ?model_main,
+        ?model_left,
         ?profile,
         dry_run,
         bindings = bindings.len(),
         "starting controller"
     );
-    let mut selectors = vec![(0, selector)];
-    if let Some(right) = right_selector {
-        selectors.push((1, right));
-    }
+    let selectors = if let Some(left) = left_selector {
+        vec![(0, left), (1, main_selector)]
+    } else {
+        vec![(0, main_selector)]
+    };
     if dry_run {
         run_loop(
             selectors,
             MappingEngine::new(TraceOutput::default(), bindings, keys),
-            None,
+            Vec::new(),
         )
     } else {
         ensure!(
@@ -356,35 +466,47 @@ fn run_controller(
             "keyboard injection requires a Windows build; use --dry-run here"
         );
         ensure!(is_elevated(), "controller must run as administrator");
-        let led_output = if model == DeviceModel::Mk2 {
-            let mut output = connect_output(&output_selector).with_context(|| {
+        let mut led_outputs = Vec::new();
+        if two_devices && model_left == DeviceModel::Mk2 {
+            let selector = left_output_selector
+                .as_ref()
+                .context("left MIDI output is required for Mk2 LEDs")?;
+            let mut output = connect_selected_output(selector).with_context(|| {
                 format!(
-                    "failed to open Mk2 LED port {output_selector:?}; set device.output_port if input and output names differ"
+                    "failed to open left Mk2 LED port {selector:?}; pass --output-left or --output-left-index"
                 )
             })?;
-            render_initial_layout(&mut output, model, profile)?;
-            Some((output, model))
-        } else {
-            None
-        };
+            render_initial_layout_for_setup(&mut output, model_left, profile, 0, true)?;
+            led_outputs.push((output, model_left));
+        }
+        if model_main == DeviceModel::Mk2 {
+            let mut output = connect_selected_output(&main_output_selector).with_context(|| {
+                format!(
+                    "failed to open right/main Mk2 LED port {main_output_selector:?}; pass --output or --output-index"
+                )
+            })?;
+            let device = u8::from(two_devices);
+            render_initial_layout_for_setup(&mut output, model_main, profile, device, two_devices)?;
+            led_outputs.push((output, model_main));
+        }
         run_loop(
             selectors,
             MappingEngine::new(KeyboardOutput::new()?, bindings, keys),
-            led_output,
+            led_outputs,
         )
     }
 }
 
 fn run_loop<B: OutputBackend>(
-    selectors: Vec<(u8, String)>,
+    selectors: Vec<(u8, PortSelector)>,
     mut engine: MappingEngine<B>,
-    mut led_output: Option<(midir::MidiOutputConnection, DeviceModel)>,
+    mut led_outputs: Vec<(midir::MidiOutputConnection, DeviceModel)>,
 ) -> Result<()> {
     install_stop_handler()?;
     let (sender, receiver) = mpsc::channel();
     let connections = selectors
         .iter()
-        .map(|(device, selector)| connect_input(selector, *device, sender.clone()))
+        .map(|(device, selector)| connect_selected_input(selector, *device, sender.clone()))
         .collect::<Result<Vec<_>>>()?;
     drop(sender);
     let mut next_presence_check = Instant::now() + Duration::from_secs(1);
@@ -416,7 +538,7 @@ fn run_loop<B: OutputBackend>(
         if Instant::now() >= next_presence_check {
             next_presence_check = Instant::now() + Duration::from_secs(1);
             for (_, selector) in &selectors {
-                match input_port_present(selector) {
+                match selected_input_present(selector) {
                     Ok(true) => {}
                     Ok(false) => {
                         tracing::error!(input = %selector, "MIDI input disappeared; releasing all");
@@ -434,7 +556,7 @@ fn run_loop<B: OutputBackend>(
     engine
         .release_all()
         .context("failed to release all keys during shutdown")?;
-    if let Some((output, model)) = &mut led_output {
+    for (output, model) in &mut led_outputs {
         clear_grid(output, *model).context("failed to clear LEDs during shutdown")?;
     }
     drop(connections);
@@ -445,7 +567,7 @@ fn run_loop<B: OutputBackend>(
 fn write_default_config(
     path: &Path,
     model: DeviceModel,
-    profile: Profile,
+    two_devices: bool,
     force: bool,
 ) -> Result<()> {
     ensure!(model != DeviceModel::Auto, "a concrete model is required");
@@ -457,10 +579,15 @@ fn write_default_config(
     }
     let mut config = AppConfig::default();
     config.device.model = model;
-    let mut bindings = default_bindings(model, profile);
-    if profile == Profile::TenKey {
+    let profile = if two_devices {
+        Profile::TenKey
+    } else {
+        Profile::FiveKey
+    };
+    let mut bindings = default_bindings_for_setup(model, profile, 0, two_devices);
+    if two_devices {
         config.device.model_right = Some(model);
-        bindings.extend(default_bindings_for_device(model, profile, 1));
+        bindings.extend(default_bindings_for_setup(model, profile, 1, true));
     }
     config.bindings = bindings
         .into_iter()
@@ -524,10 +651,47 @@ fn hex_bytes(bytes: &[u8]) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::hex_bytes;
+    use clap::Parser;
+
+    use super::{Cli, Command, hex_bytes};
 
     #[test]
     fn formats_midi_for_diagnostics() {
         assert_eq!(hex_bytes(&[0x90, 0x24, 0x7F]), "90 24 7F");
+    }
+
+    #[test]
+    fn run_accepts_four_index_selectors_without_profile() {
+        let cli = Cli::try_parse_from([
+            "controller",
+            "run",
+            "--input-index",
+            "1",
+            "--input-left-index",
+            "0",
+            "--output-index",
+            "1",
+            "--output-left-index",
+            "0",
+            "--model",
+            "mk2",
+            "--dry-run",
+        ])
+        .unwrap();
+        let Command::Run {
+            input_index,
+            input_left_index,
+            ..
+        } = cli.command
+        else {
+            panic!("expected run command");
+        };
+        assert_eq!(input_index, Some(1));
+        assert_eq!(input_left_index, Some(0));
+    }
+
+    #[test]
+    fn removed_profile_flag_is_rejected() {
+        assert!(Cli::try_parse_from(["controller", "run", "--profile", "five-key"]).is_err());
     }
 }

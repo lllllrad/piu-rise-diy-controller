@@ -10,7 +10,7 @@
 - Launchpad firmware, if known:
 - Left MIDI port:
 - Right MIDI port, if used:
-- Profile: five-key / six-key / ten-key
+- Layout: one-device five-panel / two-device ten-panel
 - Config SHA-256:
 - Log filename:
 - RISE station/mode and version:
