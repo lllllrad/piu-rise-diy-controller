@@ -11,6 +11,9 @@ fn main() {
 
     let manifest = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("manifest directory"))
         .join("assets/windows/app.manifest");
+    // Suppress the linker's default asInvoker entry so the application manifest's
+    // requireAdministrator execution level is the only UAC policy being merged.
+    println!("cargo:rustc-link-arg-bin=piu-rise-controller=/MANIFESTUAC:NO");
     println!("cargo:rustc-link-arg-bin=piu-rise-controller=/MANIFEST:EMBED");
     println!(
         "cargo:rustc-link-arg-bin=piu-rise-controller=/MANIFESTINPUT:{}",

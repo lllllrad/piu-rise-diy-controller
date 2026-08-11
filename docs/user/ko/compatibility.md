@@ -1,6 +1,6 @@
 # 호환성
 
-현재 호환성이 검증된 대상은 없습니다. 다음 표는 구현 계획과 실제 하드웨어 검증 상태를 구분합니다.
+하드웨어와 게임 호환성은 아직 검증되지 않았습니다. 다음 표는 구현 계획과 벤치 및 실제 하드웨어 검증 상태를 구분합니다.
 
 | 장치 또는 환경 | 지원 계획 | 검증 상태 |
 |---|---:|---|
@@ -11,7 +11,7 @@
 | Launchpad X | 지원 예정 | 미검증 (`Unverified`) |
 | Launchpad Mini Mk3 | 지원 예정 | 미검증 (`Unverified`) |
 | Launchpad Pro Mk3 | 지원 예정 | 미검증 (`Unverified`) |
-| Windows 키보드 출력 | MVP | 미검증 (`Unverified`) |
+| Windows 키보드 출력 | MVP | QEMU Windows PE 벤치 검증 (`Bench verified`); 데스크톱/게임 포커스는 미검증 (`Unverified`) |
 | PUMP IT UP RISE | 최종 대상 | 미검증, 실제 기기 테스트 필요 |
 | RP2030 + FT232RL 브리지 | 향후 지원 | 미구현 |
 

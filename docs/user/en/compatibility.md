@@ -1,6 +1,6 @@
 # Compatibility
 
-Compatibility is not yet verified. The table distinguishes planned implementation from testing performed with actual hardware.
+Hardware and game compatibility are not yet verified. The table distinguishes planned implementation from bench and actual-hardware testing.
 
 | Device or environment | Planned support | Verification |
 |---|---:|---|
@@ -11,7 +11,7 @@ Compatibility is not yet verified. The table distinguishes planned implementatio
 | Launchpad X | Planned | Unverified |
 | Launchpad Mini Mk3 | Planned | Unverified |
 | Launchpad Pro Mk3 | Planned | Unverified |
-| Windows keyboard output | MVP | Unverified |
+| Windows keyboard output | MVP | Bench verified in QEMU Windows PE; desktop/game focus remains Unverified |
 | PUMP IT UP RISE | Target | Unverified; real-machine testing required |
 | RP2030 + FT232RL bridge | Future | Not implemented |
 

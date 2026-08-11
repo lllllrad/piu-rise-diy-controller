@@ -1,0 +1,4 @@
+[target.x86_64-pc-windows-msvc]
+# Keep release and test binaries runnable on clean Windows installations that do
+# not already have the matching Visual C++ redistributable installed.
+rustflags = ["-C", "target-feature=+crt-static"]
