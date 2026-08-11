@@ -62,6 +62,25 @@ be matched in RISE key settings.
 
 ## 4. Dry-run the complete mapping
 
+### Launchpad Mk2 five-key layout
+
+With `--model mk2 --profile five-key`, the physical top grid row is unused.
+The eight round buttons above it provide `W`, `S`, `A`, `D`, `Enter`, `Esc`,
+`Space`, and `Tab`, from left to right.
+The eight round buttons on the right provide `Q`, `E`, `F1`, `F2`, `F3`, `F5`,
+`F6`, and `F7`, from bottom to top. Both button groups are illuminated.
+The other seven rows contain two red upper 3-by-3 panels, two blue lower
+3-by-3 panels, and a yellow 3-row-by-4-column center panel. Shared upper cells
+are dark red and shared lower cells are dark blue. Each shared cell activates
+both its corner panel and the center action and releases both together.
+The application opens the Mk2 MIDI output and
+lights this layout when live output starts; set `device.output_port` when the
+output port cannot be selected by the input-port substring. LEDs are cleared
+on a normal Ctrl+C shutdown.
+
+This MIDI address and palette behavior is `Unverified` until it is checked on
+the owner's Launchpad Mk2. `--dry-run` deliberately sends no LED output.
+
 Dry-run receives MIDI and exercises all press/reference/release state without
 injecting keys:
 

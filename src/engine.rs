@@ -11,7 +11,7 @@ use crate::{
 #[derive(Debug)]
 pub struct MappingEngine<B: OutputBackend> {
     backend: B,
-    bindings: HashMap<PhysicalControl, LogicalAction>,
+    bindings: HashMap<PhysicalControl, Vec<LogicalAction>>,
     keys: HashMap<LogicalAction, KeyCode>,
     pressed_controls: HashSet<PhysicalControl>,
     action_counts: HashMap<LogicalAction, usize>,
@@ -21,7 +21,7 @@ pub struct MappingEngine<B: OutputBackend> {
 impl<B: OutputBackend> MappingEngine<B> {
     pub fn new(
         backend: B,
-        bindings: HashMap<PhysicalControl, LogicalAction>,
+        bindings: HashMap<PhysicalControl, Vec<LogicalAction>>,
         keys: HashMap<LogicalAction, KeyCode>,
     ) -> Self {
         Self {
@@ -42,59 +42,63 @@ impl<B: OutputBackend> MappingEngine<B> {
     }
 
     fn press(&mut self, control: PhysicalControl) -> Result<()> {
-        let Some(&action) = self.bindings.get(&control) else {
+        let Some(actions) = self.bindings.get(&control).cloned() else {
             tracing::trace!(?control, "unmapped control press");
             return Ok(());
         };
         if !self.pressed_controls.insert(control) {
-            tracing::trace!(?control, ?action, "duplicate control press ignored");
+            tracing::trace!(?control, ?actions, "duplicate control press ignored");
             return Ok(());
         }
 
-        let count = self.action_counts.entry(action).or_default();
-        *count += 1;
-        if *count == 1 {
-            let key = *self
-                .keys
-                .get(&action)
-                .with_context(|| format!("no output key configured for {action}"))?;
-            let key_count = self.key_counts.entry(key).or_default();
-            *key_count += 1;
-            if *key_count == 1 {
-                self.backend.press(key)?;
+        for action in actions {
+            let count = self.action_counts.entry(action).or_default();
+            *count += 1;
+            if *count == 1 {
+                let key = *self
+                    .keys
+                    .get(&action)
+                    .with_context(|| format!("no output key configured for {action}"))?;
+                let key_count = self.key_counts.entry(key).or_default();
+                *key_count += 1;
+                if *key_count == 1 {
+                    self.backend.press(key)?;
+                }
+                tracing::debug!(?control, ?action, %key, "logical action activated");
             }
-            tracing::debug!(?control, ?action, %key, "logical action activated");
         }
         Ok(())
     }
 
     fn release(&mut self, control: PhysicalControl) -> Result<()> {
-        let Some(&action) = self.bindings.get(&control) else {
+        let Some(actions) = self.bindings.get(&control).cloned() else {
             return Ok(());
         };
         if !self.pressed_controls.remove(&control) {
-            tracing::trace!(?control, ?action, "orphan control release ignored");
+            tracing::trace!(?control, ?actions, "orphan control release ignored");
             return Ok(());
         }
 
-        let Some(count) = self.action_counts.get_mut(&action) else {
-            return Ok(());
-        };
-        *count = count.saturating_sub(1);
-        if *count == 0 {
-            self.action_counts.remove(&action);
-            let key = *self
-                .keys
-                .get(&action)
-                .with_context(|| format!("no output key configured for {action}"))?;
-            if let Some(key_count) = self.key_counts.get_mut(&key) {
-                *key_count = key_count.saturating_sub(1);
-                if *key_count == 0 {
-                    self.key_counts.remove(&key);
-                    self.backend.release(key)?;
+        for action in actions {
+            let Some(count) = self.action_counts.get_mut(&action) else {
+                continue;
+            };
+            *count = count.saturating_sub(1);
+            if *count == 0 {
+                self.action_counts.remove(&action);
+                let key = *self
+                    .keys
+                    .get(&action)
+                    .with_context(|| format!("no output key configured for {action}"))?;
+                if let Some(key_count) = self.key_counts.get_mut(&key) {
+                    *key_count = key_count.saturating_sub(1);
+                    if *key_count == 0 {
+                        self.key_counts.remove(&key);
+                        self.backend.release(key)?;
+                    }
                 }
+                tracing::debug!(?control, ?action, %key, "logical action deactivated");
             }
-            tracing::debug!(?control, ?action, %key, "logical action deactivated");
         }
         Ok(())
     }
@@ -160,8 +164,8 @@ mod tests {
 
     fn engine() -> MappingEngine<TraceOutput> {
         let bindings = HashMap::from([
-            (control(1), LogicalAction::P1Center),
-            (control(2), LogicalAction::P1Center),
+            (control(1), vec![LogicalAction::P1Center]),
+            (control(2), vec![LogicalAction::P1Center]),
         ]);
         let keys = HashMap::from([(LogicalAction::P1Center, KeyCode::new(0x46))]);
         MappingEngine::new(TraceOutput::default(), bindings, keys)
@@ -201,8 +205,8 @@ mod tests {
     #[test]
     fn actions_sharing_a_key_are_reference_counted() {
         let bindings = HashMap::from([
-            (control(1), LogicalAction::P1DownLeft),
-            (control(2), LogicalAction::UiDown),
+            (control(1), vec![LogicalAction::P1DownLeft]),
+            (control(2), vec![LogicalAction::UiDown]),
         ]);
         let keys = HashMap::from([
             (LogicalAction::P1DownLeft, KeyCode::new(0x53)),
@@ -214,6 +218,23 @@ mod tests {
         engine.handle(ControlEvent::Released(control(1))).unwrap();
         assert!(engine.backend().active().contains(&KeyCode::new(0x53)));
         engine.handle(ControlEvent::Released(control(2))).unwrap();
+        assert!(engine.backend().active().is_empty());
+    }
+
+    #[test]
+    fn one_overlap_control_activates_and_releases_two_actions() {
+        let bindings = HashMap::from([(
+            control(1),
+            vec![LogicalAction::P1DownLeft, LogicalAction::P1Center],
+        )]);
+        let keys = HashMap::from([
+            (LogicalAction::P1DownLeft, KeyCode::new(0x53)),
+            (LogicalAction::P1Center, KeyCode::new(0x46)),
+        ]);
+        let mut engine = MappingEngine::new(TraceOutput::default(), bindings, keys);
+        engine.handle(ControlEvent::Pressed(control(1))).unwrap();
+        assert_eq!(engine.backend().active().len(), 2);
+        engine.handle(ControlEvent::Released(control(1))).unwrap();
         assert!(engine.backend().active().is_empty());
     }
 
@@ -237,7 +258,7 @@ mod tests {
         let output = SharedOutput::default();
         let observed = output.0.clone();
         {
-            let bindings = HashMap::from([(control(1), LogicalAction::P1Center)]);
+            let bindings = HashMap::from([(control(1), vec![LogicalAction::P1Center])]);
             let keys = HashMap::from([(LogicalAction::P1Center, KeyCode::new(0x46))]);
             let mut engine = MappingEngine::new(output, bindings, keys);
             engine.handle(ControlEvent::Pressed(control(1))).unwrap();

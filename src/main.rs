@@ -14,7 +14,11 @@ use piu_rise_controller::{
     config::{AppConfig, DeviceModel},
     engine::MappingEngine,
     event::decode_channel_message,
-    midi::{TimestampedMidiMessage, connect_input, input_port_present, input_ports, output_ports},
+    led::{clear_grid, render_initial_layout},
+    midi::{
+        TimestampedMidiMessage, connect_input, connect_output, input_port_present, input_ports,
+        output_ports,
+    },
     output::{OutputBackend, TraceOutput},
     platform::{KeyboardOutput, install_stop_handler, is_elevated, stop_requested},
     profile::{Profile, default_bindings, default_bindings_for_device},
@@ -286,6 +290,11 @@ fn run_controller(
     let selector = input_override
         .or_else(|| config.device.input_port.clone())
         .context("MIDI input is required; pass --input or set device.input_port")?;
+    let output_selector = config
+        .device
+        .output_port
+        .clone()
+        .unwrap_or_else(|| selector.clone());
     let model = model_override.unwrap_or(config.device.model);
     ensure!(
         model != DeviceModel::Auto,
@@ -339,6 +348,7 @@ fn run_controller(
         run_loop(
             selectors,
             MappingEngine::new(TraceOutput::default(), bindings, keys),
+            None,
         )
     } else {
         ensure!(
@@ -346,9 +356,21 @@ fn run_controller(
             "keyboard injection requires a Windows build; use --dry-run here"
         );
         ensure!(is_elevated(), "controller must run as administrator");
+        let led_output = if model == DeviceModel::Mk2 {
+            let mut output = connect_output(&output_selector).with_context(|| {
+                format!(
+                    "failed to open Mk2 LED port {output_selector:?}; set device.output_port if input and output names differ"
+                )
+            })?;
+            render_initial_layout(&mut output, model, profile)?;
+            Some((output, model))
+        } else {
+            None
+        };
         run_loop(
             selectors,
             MappingEngine::new(KeyboardOutput::new()?, bindings, keys),
+            led_output,
         )
     }
 }
@@ -356,6 +378,7 @@ fn run_controller(
 fn run_loop<B: OutputBackend>(
     selectors: Vec<(u8, String)>,
     mut engine: MappingEngine<B>,
+    mut led_output: Option<(midir::MidiOutputConnection, DeviceModel)>,
 ) -> Result<()> {
     install_stop_handler()?;
     let (sender, receiver) = mpsc::channel();
@@ -411,6 +434,9 @@ fn run_loop<B: OutputBackend>(
     engine
         .release_all()
         .context("failed to release all keys during shutdown")?;
+    if let Some((output, model)) = &mut led_output {
+        clear_grid(output, *model).context("failed to clear LEDs during shutdown")?;
+    }
     drop(connections);
     tracing::info!("controller stopped cleanly");
     Ok(())
@@ -438,7 +464,11 @@ fn write_default_config(
     }
     config.bindings = bindings
         .into_iter()
-        .map(|(control, action)| piu_rise_controller::config::BindingConfig { control, action })
+        .flat_map(|(control, actions)| {
+            actions
+                .into_iter()
+                .map(move |action| piu_rise_controller::config::BindingConfig { control, action })
+        })
         .collect();
     config.bindings.sort_by_key(|binding| {
         (

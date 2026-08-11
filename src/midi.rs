@@ -1,7 +1,10 @@
 use std::sync::mpsc::Sender;
 
 use anyhow::{Context, Result, bail};
-use midir::{Ignore, MidiInput, MidiInputConnection, MidiInputPort, MidiOutput};
+use midir::{
+    Ignore, MidiInput, MidiInputConnection, MidiInputPort, MidiOutput, MidiOutputConnection,
+    MidiOutputPort,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct PortInfo {
@@ -83,6 +86,44 @@ pub fn connect_input(
             (),
         )
         .map_err(|error| anyhow::anyhow!("failed to connect to MIDI input {name}: {error}"))
+}
+
+pub fn connect_output(selector: &str) -> Result<MidiOutputConnection> {
+    let output =
+        MidiOutput::new("piu-rise-controller").context("failed to initialize MIDI output")?;
+    let ports = output.ports();
+    let port = select_output_port(&output, &ports, selector)?;
+    let name = output
+        .port_name(port)
+        .context("failed to read selected MIDI output port name")?;
+    tracing::info!(port = %name, "opening MIDI output");
+    output
+        .connect(port, "piu-rise-controller-led-output")
+        .map_err(|error| anyhow::anyhow!("failed to connect to MIDI output {name}: {error}"))
+}
+
+fn select_output_port<'a>(
+    output: &MidiOutput,
+    ports: &'a [MidiOutputPort],
+    selector: &str,
+) -> Result<&'a MidiOutputPort> {
+    let selector_lower = selector.to_ascii_lowercase();
+    let matches: Vec<_> = ports
+        .iter()
+        .filter(|port| {
+            output
+                .port_name(port)
+                .is_ok_and(|name| name.to_ascii_lowercase().contains(&selector_lower))
+        })
+        .collect();
+    match matches.as_slice() {
+        [port] => Ok(*port),
+        [] => bail!("no MIDI output port contains {selector:?}; run `list` to inspect ports"),
+        _ => bail!(
+            "MIDI output selector {selector:?} is ambiguous ({} matches); set device.output_port to a more specific value",
+            matches.len()
+        ),
+    }
 }
 
 fn select_input_port<'a>(

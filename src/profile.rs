@@ -17,27 +17,23 @@ pub enum Profile {
     TenKey,
 }
 
-pub fn default_bindings(
-    model: DeviceModel,
-    profile: Profile,
-) -> HashMap<PhysicalControl, LogicalAction> {
+pub type Bindings = HashMap<PhysicalControl, Vec<LogicalAction>>;
+
+pub fn default_bindings(model: DeviceModel, profile: Profile) -> Bindings {
     default_bindings_for_device(model, profile, 0)
 }
 
-pub fn default_bindings_for_device(
-    model: DeviceModel,
-    profile: Profile,
-    device: u8,
-) -> HashMap<PhysicalControl, LogicalAction> {
+pub fn default_bindings_for_device(model: DeviceModel, profile: Profile, device: u8) -> Bindings {
     let mut bindings = HashMap::new();
     for y in 0..7 {
         for x in 0..8 {
-            let Some(action) = action_at(profile, device, x, y) else {
+            let actions = actions_at(profile, device, x, y);
+            if actions.is_empty() {
                 continue;
-            };
+            }
             if let Some(mut control) = grid_control(model, x, y) {
                 control.device = device;
-                bindings.insert(control, action);
+                bindings.insert(control, actions);
             }
         }
     }
@@ -45,11 +41,7 @@ pub fn default_bindings_for_device(
     bindings
 }
 
-fn add_ui_bindings(
-    bindings: &mut HashMap<PhysicalControl, LogicalAction>,
-    model: DeviceModel,
-    device: u8,
-) {
+fn add_ui_bindings(bindings: &mut Bindings, model: DeviceModel, device: u8) {
     use LogicalAction::{
         UiBack, UiChannelNext, UiChannelPrev, UiCommand, UiConfirm, UiDown, UiFavorite,
         UiHighlight, UiLeaderboard, UiLeft, UiMenu, UiMultiplay, UiRight, UiSort, UiTypeToggle,
@@ -70,20 +62,21 @@ fn add_ui_bindings(
         UiCommand,
         UiTypeToggle,
     ];
-    let primary_base = if model == DeviceModel::Modern {
-        91
-    } else {
-        104
-    };
     for (offset, action) in primary.into_iter().enumerate() {
+        let offset = u8::try_from(offset).expect("offset is at most 7");
+        let primary_base = if model == DeviceModel::Modern {
+            91
+        } else {
+            104
+        };
         bindings.insert(
             PhysicalControl {
                 device,
                 kind: MessageKind::ControlChange,
                 channel: 0,
-                number: primary_base + u8::try_from(offset).expect("offset is at most 7"),
+                number: primary_base + offset,
             },
-            action,
+            vec![action],
         );
     }
 
@@ -116,56 +109,64 @@ fn add_ui_bindings(
             },
             DeviceModel::Auto => continue,
         };
-        bindings.insert(control, action);
+        bindings.insert(control, vec![action]);
     }
 }
 
-fn action_at(profile: Profile, device: u8, x: u8, y: u8) -> Option<LogicalAction> {
+fn actions_at(profile: Profile, device: u8, x: u8, y: u8) -> Vec<LogicalAction> {
     use LogicalAction::{
         Lane1, Lane2, Lane3, Lane4, Lane5, Lane6, P1Center, P1DownLeft, P1DownRight, P1UpLeft,
         P1UpRight, P2Center, P2DownLeft, P2DownRight, P2UpLeft, P2UpRight,
     };
     match profile {
-        Profile::FiveKey => match (x, y) {
-            (0..=2, 0..=1) => Some(P1DownLeft),
-            (5..=7, 0..=1) => Some(P1DownRight),
-            (2..=5, 2..=4) => Some(P1Center),
-            (0..=2, 5..=6) => Some(P1UpLeft),
-            (5..=7, 5..=6) => Some(P1UpRight),
-            _ => None,
-        },
+        Profile::FiveKey => five_key_actions_at(x, y),
         Profile::SixKey => match x {
-            0 => Some(Lane1),
-            1 => Some(Lane2),
-            2 | 3 => Some(Lane3),
-            4 | 5 => Some(Lane4),
-            6 => Some(Lane5),
-            7 => Some(Lane6),
-            _ => None,
+            0 => vec![Lane1],
+            1 => vec![Lane2],
+            2 | 3 => vec![Lane3],
+            4 | 5 => vec![Lane4],
+            6 => vec![Lane5],
+            7 => vec![Lane6],
+            _ => Vec::new(),
         },
         Profile::TenKey => {
-            let player_one = match (x, y) {
-                (0..=2, 0..=1) => Some(P1DownLeft),
-                (5..=7, 0..=1) => Some(P1DownRight),
-                (2..=5, 2..=4) => Some(P1Center),
-                (0..=2, 5..=6) => Some(P1UpLeft),
-                (5..=7, 5..=6) => Some(P1UpRight),
-                _ => None,
-            };
+            let player_one = five_key_actions_at(x, y);
             if device == 0 {
                 player_one
             } else {
-                player_one.map(|action| match action {
-                    P1DownLeft => P2DownLeft,
-                    P1UpLeft => P2UpLeft,
-                    P1Center => P2Center,
-                    P1UpRight => P2UpRight,
-                    P1DownRight => P2DownRight,
-                    _ => unreachable!("unexpected spatial action"),
-                })
+                player_one
+                    .into_iter()
+                    .map(|action| match action {
+                        P1DownLeft => P2DownLeft,
+                        P1UpLeft => P2UpLeft,
+                        P1Center => P2Center,
+                        P1UpRight => P2UpRight,
+                        P1DownRight => P2DownRight,
+                        _ => unreachable!("unexpected spatial action"),
+                    })
+                    .collect()
             }
         }
     }
+}
+
+fn five_key_actions_at(x: u8, y: u8) -> Vec<LogicalAction> {
+    use LogicalAction::{P1Center, P1DownLeft, P1DownRight, P1UpLeft, P1UpRight};
+
+    let mut actions = Vec::with_capacity(2);
+    if x <= 2 && y <= 2 {
+        actions.push(P1DownLeft);
+    } else if x >= 5 && y <= 2 {
+        actions.push(P1DownRight);
+    } else if x <= 2 && (4..=6).contains(&y) {
+        actions.push(P1UpLeft);
+    } else if x >= 5 && (4..=6).contains(&y) {
+        actions.push(P1UpRight);
+    }
+    if (2..=5).contains(&x) && (2..=4).contains(&y) {
+        actions.push(P1Center);
+    }
+    actions
 }
 
 pub fn grid_control(model: DeviceModel, x: u8, y: u8) -> Option<PhysicalControl> {
@@ -207,7 +208,7 @@ mod tests {
         let bindings = default_bindings(DeviceModel::Original, Profile::FiveKey);
         for (x, y) in [(2, 2), (5, 4)] {
             let control = grid_control(DeviceModel::Original, x, y).unwrap();
-            assert_eq!(bindings[&control], LogicalAction::P1Center);
+            assert_eq!(bindings[&control], vec![LogicalAction::P1Center]);
         }
     }
 
@@ -219,14 +220,14 @@ mod tests {
     #[test]
     fn legacy_defaults_include_menu_controls() {
         let bindings = default_bindings(DeviceModel::Original, Profile::FiveKey);
-        assert_eq!(bindings.len(), 52);
+        assert_eq!(bindings.len(), 60);
         let confirm = super::PhysicalControl {
             device: 0,
             kind: super::MessageKind::ControlChange,
             channel: 0,
             number: 108,
         };
-        assert_eq!(bindings[&confirm], LogicalAction::UiConfirm);
+        assert_eq!(bindings[&confirm], vec![LogicalAction::UiConfirm]);
     }
 
     #[test]
@@ -234,6 +235,47 @@ mod tests {
         let bindings = default_bindings_for_device(DeviceModel::Mk2, Profile::TenKey, 1);
         let mut control = grid_control(DeviceModel::Mk2, 0, 0).unwrap();
         control.device = 1;
-        assert_eq!(bindings[&control], LogicalAction::P2DownLeft);
+        assert_eq!(bindings[&control], vec![LogicalAction::P2DownLeft]);
+    }
+
+    #[test]
+    fn mk2_top_grid_row_is_unmapped_and_top_button_is_back() {
+        let bindings = default_bindings(DeviceModel::Mk2, Profile::FiveKey);
+        let top_grid = grid_control(DeviceModel::Mk2, 5, 7).unwrap();
+        assert!(!bindings.contains_key(&top_grid));
+        let back = super::PhysicalControl {
+            device: 0,
+            kind: super::MessageKind::ControlChange,
+            channel: 0,
+            number: 109,
+        };
+        assert_eq!(bindings[&back], vec![LogicalAction::UiBack]);
+    }
+
+    #[test]
+    fn mk2_lower_right_buttons_are_q_and_e() {
+        let bindings = default_bindings(DeviceModel::Mk2, Profile::FiveKey);
+        for (number, action) in [
+            (19, LogicalAction::UiChannelPrev),
+            (29, LogicalAction::UiChannelNext),
+        ] {
+            let control = super::PhysicalControl {
+                device: 0,
+                kind: super::MessageKind::ControlChange,
+                channel: 0,
+                number,
+            };
+            assert_eq!(bindings[&control], vec![action]);
+        }
+    }
+
+    #[test]
+    fn overlap_triggers_corner_and_center_together() {
+        let bindings = default_bindings(DeviceModel::Mk2, Profile::FiveKey);
+        let lower_left_overlap = grid_control(DeviceModel::Mk2, 2, 2).unwrap();
+        assert_eq!(
+            bindings[&lower_left_overlap],
+            vec![LogicalAction::P1DownLeft, LogicalAction::P1Center]
+        );
     }
 }

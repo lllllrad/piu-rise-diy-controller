@@ -102,7 +102,7 @@ impl AppConfig {
             key.parse::<KeyCode>()
                 .with_context(|| format!("invalid key for {action}"))?;
         }
-        let mut controls = HashSet::new();
+        let mut control_actions = HashSet::new();
         for binding in &self.bindings {
             ensure!(
                 binding.control.device <= 1,
@@ -128,9 +128,10 @@ impl AppConfig {
                 binding.action
             );
             ensure!(
-                controls.insert(binding.control),
-                "physical control {:?} is bound more than once",
-                binding.control
+                control_actions.insert((binding.control, binding.action)),
+                "physical control {:?} repeats action {}",
+                binding.control,
+                binding.action
             );
         }
         Ok(())
@@ -143,11 +144,15 @@ impl AppConfig {
             .collect()
     }
 
-    pub fn parsed_bindings(&self) -> HashMap<PhysicalControl, LogicalAction> {
-        self.bindings
-            .iter()
-            .map(|binding| (binding.control, binding.action))
-            .collect()
+    pub fn parsed_bindings(&self) -> HashMap<PhysicalControl, Vec<LogicalAction>> {
+        let mut parsed: HashMap<PhysicalControl, Vec<LogicalAction>> = HashMap::new();
+        for binding in &self.bindings {
+            parsed
+                .entry(binding.control)
+                .or_default()
+                .push(binding.action);
+        }
+        parsed
     }
 }
 
@@ -217,7 +222,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_duplicate_controls() {
+    fn allows_one_control_to_trigger_multiple_actions() {
         let mut config = AppConfig::default();
         let control = PhysicalControl {
             device: 0,
@@ -235,7 +240,8 @@ mod tests {
                 action: LogicalAction::P1UpLeft,
             },
         ];
-        assert!(config.validate().is_err());
+        assert!(config.validate().is_ok());
+        assert_eq!(config.parsed_bindings()[&control].len(), 2);
     }
 
     #[test]

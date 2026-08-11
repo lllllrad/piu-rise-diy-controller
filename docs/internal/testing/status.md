@@ -1,6 +1,6 @@
 # Verification Status
 
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 
 ## Automated evidence
 
@@ -40,7 +40,9 @@ hardware, Launchpad, or game.
 - MIDI enumeration and hot-unplug polling with a physical device: Unverified.
 - Original/Mk1 or Mk2 address assumptions on the owner's device: Unverified.
 - PUMP IT UP RISE menu/gameplay behavior: Unverified; owner test required.
-- LED output: not implemented in the passive MVP.
+- Launchpad Mk2 palette LED output and the revised 5K grid layout compile and
+  pass Clippy on the Windows development host. Physical Mk2 behavior remains
+  Unverified; no device was attached for this change.
 - RP2030 + FT232RL serial output: not implemented.
 
 This file must be updated from actual command output; it is not a release

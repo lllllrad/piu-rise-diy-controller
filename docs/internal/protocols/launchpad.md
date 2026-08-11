@@ -33,16 +33,17 @@ LaunchpadAdapter
 
 The exact split may change after hardware identification, but logical mappings must remain independent of it.
 
-## Implemented passive MVP address assumptions
+## Implemented address assumptions
 
-The current MVP sends no automatic layout-selection or LED SysEx. The user
-selects a usable device mode and confirms addresses with `monitor` before live
-output.
+The application sends no automatic layout-selection SysEx. The user selects a
+usable device mode and confirms addresses with `monitor` before live output.
+For an explicitly selected `mk2`, live mode sends palette-index Note On
+messages to the 64 grid LEDs. This does not run in the input dispatch path.
 
 | Adapter choice | Grid assumption | Primary UI | Secondary UI | Status |
 |---|---|---|---|---|
 | `original` / `launchpad-s` / `mini-legacy` | Top-left is Note 0; rows advance by 16 | CC 104..111 | Scene Notes 8, 24, ..., 120 | Unverified |
-| `mk2` | Bottom-left is Note 11; rows advance by 10 | CC 104..111 | Right CC 19, 29, ..., 89 | Unverified |
+| `mk2` | Bottom-left is Note 11; rows advance by 10 | Top CC 104..111; grid Notes 81..88 unused | Right CC 19, 29, ..., 89 | Unverified |
 | `modern` | Bottom-left is Note 11; rows advance by 10 | CC 91..98 | Right CC 19, 29, ..., 89 | Unverified |
 
 Five-key uses a spatial panel layout. Six-key uses vertical lanes. Ten-key
@@ -53,6 +54,14 @@ default assumption.
 Original Launchpad coordinates are based on the official X-Y mapping. Mk2 and
 modern defaults remain bench-unverified in this repository even where their
 address maps come from official documents.
+
+The Mk2 five-key grid leaves Notes 81..88 unused and assigns the eight primary
+UI actions to the round top buttons at CC 104..111. The remaining rows use
+3-by-3 corner regions and a 3-row-by-4-column center region. Each of the four
+overlap controls maps to both its corner action and the center action. The LED
+uses a darker shade of that corner's red or blue rather than a mixed color.
+Mk2 palette Note On and CC output is cleared on normal
+shutdown. Runtime pressed-state animation is not implemented.
 
 ## Required normalized events
 
