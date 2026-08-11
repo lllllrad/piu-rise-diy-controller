@@ -29,8 +29,10 @@ user guides.
 ## Development environment
 
 No single environment manager is mandatory. A system Rust installation can be
-used directly, while the checked-in `mise.toml` provides the pinned Rust
-toolchain and common verification tasks for environments that use
-[mise](https://mise.jdx.dev/). Linux-based isolated workspaces can optionally
-use [DIM](https://github.com/slop-lab/dev-infra-manager); see the development
+used directly. The development-only `justfile` provides a compact command
+index (`just`, `just build`, `just run`, and `just verify`), while the
+checked-in `mise.toml` can install the pinned Rust toolchain and `just` for
+environments that use [mise](https://mise.jdx.dev/). Linux-based isolated
+workspaces can optionally use
+[DIM](https://github.com/slop-lab/dev-infra-manager); see the development
 environment guide for its scope and commands.

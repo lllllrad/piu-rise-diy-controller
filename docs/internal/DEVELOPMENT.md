@@ -11,10 +11,36 @@ elevation, Windows input injection, MIDI hot-plug behavior, and physical
 Launchpad integration. Install the Rust version recorded in `mise.toml` using
 rustup, mise, or another toolchain manager.
 
+## just
+
+The repository `justfile` is an optional development-only command index. Run
+`just` to list the small supported recipe set:
+
+```sh
+just build
+just release
+just run                 # prints CLI help by default
+just run doctor
+just run list
+just run monitor --input "Launchpad"
+just test
+just verify
+```
+
+`just run` uses Cargo's debug profile. The resulting application still follows
+the Windows administrator manifest and may request elevation. Use
+`just run run --input "Launchpad" --dry-run` when exercising mappings without
+injecting keyboard input.
+
+Just is not installed with or required by a release. Every recipe is a short
+wrapper around the corresponding Cargo or repository command, so direct tools
+remain fully supported.
+
 ## mise
 
 The repository includes `mise.toml` so a machine without a preconfigured Rust
-environment can install the pinned toolchain and expose common tasks:
+environment can install the pinned toolchain and `just`, and expose common
+tasks:
 
 ```sh
 mise install
