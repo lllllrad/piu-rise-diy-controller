@@ -63,6 +63,9 @@ case "$task" in
         require_cargo_project
         run_tool cargo test --all-targets "$@"
         ;;
+    docs)
+        exec sh scripts/check-doc-parity.sh "$@"
+        ;;
     verify)
         require_cargo_project
         if command -v mise >/dev/null 2>&1; then
@@ -73,7 +76,7 @@ case "$task" in
         ;;
     *)
         echo "unknown DIM project task: $task" >&2
-        echo "available tasks: bootstrap, doctor, shell, fmt, check, test, verify" >&2
+        echo "available tasks: bootstrap, doctor, shell, fmt, check, test, docs, verify" >&2
         exit 2
         ;;
 esac

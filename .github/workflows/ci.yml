@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check paired user documentation
+        run: sh scripts/check-doc-parity.sh
+
+  rust:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+          components: rustfmt, clippy
+      - name: Install Linux MIDI build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --yes libasound2-dev
+      - name: Check formatting
+        run: cargo fmt --all --check
+      - name: Run Clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Run tests
+        run: cargo test --all-targets
+
+  windows-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.97.1
+      - name: Build elevated Windows executable
+        run: cargo build --release --locked
+      - name: Verify embedded elevation manifest
+        shell: pwsh
+        run: |
+          $path = "target/release/piu-rise-controller.exe"
+          $bytes = [System.IO.File]::ReadAllBytes($path)
+          $utf8 = [System.Text.Encoding]::UTF8.GetString($bytes)
+          $utf16 = [System.Text.Encoding]::Unicode.GetString($bytes)
+          if (-not $utf8.Contains("requireAdministrator") -and -not $utf16.Contains("requireAdministrator")) {
+            throw "release executable does not contain the requireAdministrator manifest"
+          }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piu-rise-controller-windows-x64
+          path: target/release/piu-rise-controller.exe

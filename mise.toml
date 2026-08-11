@@ -13,6 +13,10 @@ run = "cargo check --all-targets"
 description = "Run the Rust test suite"
 run = "cargo test --all-targets"
 
+[tasks.docs]
+description = "Check bilingual user-document path parity"
+run = "sh scripts/check-doc-parity.sh"
+
 [tasks.verify]
 description = "Run all local Rust verification"
-depends = ["fmt", "check", "test"]
+depends = ["fmt", "check", "test", "docs"]
