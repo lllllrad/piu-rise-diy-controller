@@ -35,6 +35,8 @@ Build a Windows-only Rust application that turns one or two Novation Launchpads 
 ## Development workflow
 
 - Keep commits small enough to review and revert independently.
+- Treat mise and DIM as supported optional development environments; do not make either one mandatory when equivalent direct tooling works.
+- Keep `.dim/entrypoint.sh` tasks non-interactive and safe to rerun. DIM is Linux-only and cannot validate Windows-specific or real-hardware behavior.
 - Commit messages and branch names are English.
 - Do not mix mechanical formatting, documentation translation, and behavior changes in one commit unless inseparable.
 - Before committing, run the relevant formatter, linter, unit tests, and documentation checks available in the repository.

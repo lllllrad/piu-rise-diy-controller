@@ -1,0 +1,18 @@
+[tools]
+rust = "1.97.1"
+
+[tasks.fmt]
+description = "Check Rust formatting"
+run = "cargo fmt --all --check"
+
+[tasks.check]
+description = "Run the Rust compiler checks"
+run = "cargo check --all-targets"
+
+[tasks.test]
+description = "Run the Rust test suite"
+run = "cargo test --all-targets"
+
+[tasks.verify]
+description = "Run all local Rust verification"
+depends = ["fmt", "check", "test"]

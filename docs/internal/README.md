@@ -5,6 +5,7 @@ Internal documentation is English-only and records the normative design of the p
 ## Index
 
 - [Goals and non-goals](GOALS.md)
+- [Development environments](DEVELOPMENT.md)
 - [Roadmap](ROADMAP.md)
 - [System architecture](architecture/system.md)
 - [Launchpad protocol strategy](protocols/launchpad.md)

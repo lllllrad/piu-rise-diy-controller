@@ -9,6 +9,7 @@ This repository is at the design and scaffolding stage. Compatibility claims wil
 - [English user documentation](docs/user/en/README.md)
 - [한국어 사용자 문서](docs/user/ko/README.md)
 - [Internal technical documentation](docs/internal/README.md)
+- [Development environments](docs/internal/DEVELOPMENT.md)
 - [Project roadmap](docs/internal/ROADMAP.md)
 - [Contributing](CONTRIBUTING.md)
 
@@ -21,3 +22,12 @@ This repository is at the design and scaffolding stage. Compatibility claims wil
 - Future serial hardware output through RP2030 + FT232RL
 
 No release is available yet.
+
+## Development environment
+
+No single environment manager is mandatory. A system Rust installation can be
+used directly, while the checked-in `mise.toml` provides the pinned Rust
+toolchain and common verification tasks for environments that use
+[mise](https://mise.jdx.dev/). Linux-based isolated workspaces can optionally
+use [DIM](https://github.com/slop-lab/dev-infra-manager); see the development
+environment guide for its scope and commands.

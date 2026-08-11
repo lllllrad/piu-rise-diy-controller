@@ -1,0 +1,10 @@
+# Local research, prompts, and machine-specific working files
+/.local/
+
+# Rust build output
+/target/
+
+# Local environment and diagnostic output
+.env
+.env.*
+*.log
