@@ -33,6 +33,27 @@ LaunchpadAdapter
 
 The exact split may change after hardware identification, but logical mappings must remain independent of it.
 
+## Implemented passive MVP address assumptions
+
+The current MVP sends no automatic layout-selection or LED SysEx. The user
+selects a usable device mode and confirms addresses with `monitor` before live
+output.
+
+| Adapter choice | Grid assumption | Primary UI | Secondary UI | Status |
+|---|---|---|---|---|
+| `original` / `launchpad-s` / `mini-legacy` | Top-left is Note 0; rows advance by 16 | CC 104..111 | Scene Notes 8, 24, ..., 120 | Unverified |
+| `mk2` | Bottom-left is Note 11; rows advance by 10 | CC 104..111 | Right CC 19, 29, ..., 89 | Unverified |
+| `modern` | Bottom-left is Note 11; rows advance by 10 | CC 91..98 | Right CC 19, 29, ..., 89 | Unverified |
+
+Five-key uses a spatial panel layout. Six-key uses vertical lanes. Ten-key
+assigns device 0 to P1 and device 1 to P2 and routes both through one shared
+output reference-count state. Configuration bindings can replace every
+default assumption.
+
+Original Launchpad coordinates are based on the official X-Y mapping. Mk2 and
+modern defaults remain bench-unverified in this repository even where their
+address maps come from official documents.
+
 ## Required normalized events
 
 ```text

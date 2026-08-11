@@ -36,7 +36,11 @@ Owns the set of active logical outputs and performs edge-triggered press/release
 
 ### Output backends
 
-The initial backend uses Windows keyboard injection. It is isolated behind a trait so the future serial bridge can transmit the same logical output transitions.
+The initial backend uses Windows `SendInput` keyboard injection. Configured
+virtual-key names are converted to scan codes, including extended-key flags,
+so gameplay input resembles physical key transitions and is independent of the
+active keyboard layout. It is isolated behind a trait so the future serial
+bridge can transmit the same logical output transitions.
 
 The serial backend must eventually include protocol version negotiation, sequence/framing protection, heartbeat timeout, and an explicit Release All command. FT232RL is a transport detail; USB input presentation is owned by downstream firmware/hardware.
 

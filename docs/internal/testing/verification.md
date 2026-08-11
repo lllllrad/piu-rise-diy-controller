@@ -24,8 +24,14 @@
 - Key down/up and simultaneous-key observation in a dedicated test receiver.
 - MIDI hot-plug, reconnect, and port-pairing behavior.
 - Clean shutdown, recoverable failure, and panic cleanup where execution continues long enough to clean up.
+- Embedded `requireAdministrator` manifest inspection in the release executable.
+- MIDI-port disappearance detection and Release All within the polling interval.
 
 OS integration tests cannot prove cleanup after unconditional process termination or power loss. This limitation must remain documented.
+
+The Windows release CI scans the built PE resource bytes for
+`requireAdministrator`. This is a packaging guard, not proof that UAC or
+SendInput succeeds on the target machine.
 
 ### Hardware bench tests
 
@@ -44,6 +50,8 @@ Only the owner can perform these on the real machine. Each test record should in
 - profile and mapping config hash;
 - output backend;
 - menu, tap, hold, chord, disconnect, and recovery results.
+
+Start each run from the [RISE test record template](rise-test-record-template.md).
 
 ## Compatibility claims
 

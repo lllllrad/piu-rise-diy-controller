@@ -23,6 +23,11 @@ Exit condition: the device model is known or a safe capability probe can disting
 
 Exit condition: bench-verified press/release behavior, disconnect recovery, profile switching, and simultaneous input on the owner's device.
 
+Implementation status: the passive monitor, legacy address-family defaults,
+5K/6K/10K mappings, shared reference-counted key state, Windows SendInput
+backend, elevation manifest, disconnect polling, daily logs, and dry-run CLI
+exist but remain `Unverified` until Windows CI and owner hardware tests pass.
+
 ## Phase 2: Real RISE validation
 
 - Owner tests installation, elevation, menus, gameplay holds, simultaneous inputs, and recovery on the real machine.

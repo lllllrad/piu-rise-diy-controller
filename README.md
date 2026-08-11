@@ -2,7 +2,9 @@
 
 A Windows-only Rust controller application for using one or two Novation Launchpads with PUMP IT UP RISE. Legacy Launchpad support is part of the MVP, and the architecture reserves an output path for a future RP2030 + FT232RL hardware bridge.
 
-This repository is at the design and scaffolding stage. Compatibility claims will be separated into desktop/bench verification and verification on a real PUMP IT UP RISE machine.
+This repository contains an unverified engineering MVP. Compatibility claims
+are separated into desktop/bench verification and verification on a real PUMP
+IT UP RISE machine.
 
 ## Documentation
 
@@ -21,7 +23,8 @@ This repository is at the design and scaffolding stage. Compatibility claims wil
 - Windows keyboard output first
 - Future serial hardware output through RP2030 + FT232RL
 
-No release is available yet.
+No verified release is available yet. Build and test instructions are in the
+user guides.
 
 ## Development environment
 

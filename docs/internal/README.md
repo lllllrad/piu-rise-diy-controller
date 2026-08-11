@@ -10,6 +10,8 @@ Internal documentation is English-only and records the normative design of the p
 - [System architecture](architecture/system.md)
 - [Launchpad protocol strategy](protocols/launchpad.md)
 - [Verification strategy](testing/verification.md)
+- [Current verification status](testing/status.md)
+- [RISE test record template](testing/rise-test-record-template.md)
 - [ADR index](adr/README.md)
 
 ## Status vocabulary
