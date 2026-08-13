@@ -1,18 +1,9 @@
-use std::{env, path::PathBuf};
-
 fn main() {
-    tauri_build::build();
+    println!("cargo:rerun-if-changed=../assets/windows/app.manifest");
 
-    if env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows")
-        || env::var("CARGO_CFG_TARGET_ENV").as_deref() != Ok("msvc")
-    {
-        return;
-    }
+    let windows = tauri_build::WindowsAttributes::new()
+        .app_manifest(include_str!("../assets/windows/app.manifest"));
+    let attributes = tauri_build::Attributes::new().windows_attributes(windows);
 
-    let manifest = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").expect("manifest directory"))
-        .join("../assets/windows/app.manifest");
-    println!("cargo:rerun-if-changed={}", manifest.display());
-    println!("cargo:rustc-link-arg=/MANIFESTUAC:NO");
-    println!("cargo:rustc-link-arg=/MANIFEST:EMBED");
-    println!("cargo:rustc-link-arg=/MANIFESTINPUT:{}", manifest.display());
+    tauri_build::try_build(attributes).expect("failed to run Tauri build script");
 }

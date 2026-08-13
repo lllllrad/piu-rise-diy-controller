@@ -16,6 +16,10 @@ release:
 run command="--help" *args:
     cargo run --locked -- {{command}} {{args}}
 
+# Run the Tauri GUI development application.
+run-gui:
+    cargo run --locked --manifest-path src-tauri/Cargo.toml
+
 # Format Rust source files.
 fmt:
     cargo fmt --all
