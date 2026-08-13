@@ -113,6 +113,17 @@ impl<B: OutputBackend> MappingEngine<B> {
         result
     }
 
+    /// Replaces the active physical layout after releasing every output and
+    /// forgetting pressed controls from the previous layout.
+    pub fn replace_bindings(
+        &mut self,
+        bindings: HashMap<PhysicalControl, Vec<LogicalAction>>,
+    ) -> Result<()> {
+        self.release_all()?;
+        self.bindings = bindings;
+        Ok(())
+    }
+
     pub fn backend(&self) -> &B {
         &self.backend
     }
@@ -219,6 +230,20 @@ mod tests {
         assert!(engine.backend().active().contains(&KeyCode::new(0x53)));
         engine.handle(ControlEvent::Released(control(2))).unwrap();
         assert!(engine.backend().active().is_empty());
+    }
+
+    #[test]
+    fn replacing_layout_releases_old_outputs_before_accepting_new_input() {
+        let mut engine = engine();
+        engine.handle(ControlEvent::Pressed(control(1))).unwrap();
+        engine
+            .replace_bindings(HashMap::from([(control(3), vec![LogicalAction::P1Center])]))
+            .unwrap();
+        assert!(engine.backend().active().is_empty());
+        engine.handle(ControlEvent::Released(control(1))).unwrap();
+        assert!(engine.backend().active().is_empty());
+        engine.handle(ControlEvent::Pressed(control(3))).unwrap();
+        assert_eq!(engine.backend().active().len(), 1);
     }
 
     #[test]

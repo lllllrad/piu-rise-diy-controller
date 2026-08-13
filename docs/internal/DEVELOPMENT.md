@@ -4,6 +4,15 @@ The project supports several development environments. None of the optional
 tools below is a requirement for contributors who already have a suitable Rust
 toolchain.
 
+## Isolated Tauri check
+
+Do not install Tauri's Linux WebKitGTK, D-Bus, or indicator development
+packages on the host solely to check this Windows application. Run
+`just check-gui-container` instead. It builds the pinned Debian-based image in
+`docker/tauri-linux.Dockerfile` and checks the independent `src-tauri` crate.
+Docker image and BuildKit cache layers own all downloaded system and Rust
+dependencies.
+
 ## Native development
 
 Native Windows is required for meaningful validation of administrator
@@ -62,10 +71,14 @@ only. It is useful for documentation work, compilation, static checks, and
 platform-independent unit tests, but it cannot replace native Windows or real
 RISE hardware verification.
 
-This repository intentionally uses only the minimal DIM project contract:
-`.dim/entrypoint.sh`. It does not start project services or require a DIM
-Compose stack. After registering this repository as a DIM project root, common
-commands are:
+This remains a single-repository DIM project. Its reviewed `.dim/setup.sh`
+starts a project-owned `agent` container and a separate privileged rootless
+DinD service. The agent receives only the private DinD TCP endpoint, not the
+host or trusted-workspace Docker socket. This lets the agent build the Tauri
+check image without installing WebKitGTK or D-Bus packages on the host or in
+the ordinary agent image.
+
+After registering this repository as a DIM project root, common commands are:
 
 ```sh
 dim create piu-rise-diy-controller piu-rise-dev
@@ -76,13 +89,15 @@ dim run piu-rise-dev fmt
 dim run piu-rise-dev check
 dim run piu-rise-dev test
 dim run piu-rise-dev verify
+dim run piu-rise-dev check-gui-container
+dim run piu-rise-dev codex
 ```
 
 The exact DIM CLI version and host backend are managed by the DIM installation,
 not this repository. DIM is pre-stable software; pin and review the version at
-the host level. The `bootstrap` task installs tools declared by `mise.toml` and
-therefore requires mise to be available inside the workspace. Other tasks use
-mise when available and otherwise use tools already on `PATH`.
+the host level. The agent image pins Rust 1.97 and Docker CLI/DinD 29.1.3.
+`bootstrap` reports the preinstalled tool versions; it does not modify the
+host. `check-gui-container` uses the agent's private Docker daemon.
 
 ## Verification boundaries
 

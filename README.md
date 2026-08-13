@@ -26,6 +26,26 @@ IT UP RISE machine.
 No verified release is available yet. Build and test instructions are in the
 user guides.
 
+## Layout editor preview
+
+Open `web/index.html` in a current browser to inspect the shared layout editor
+without installing anything. Browser mode uses a demo backend and never sends
+MIDI or keyboard output.
+
+The native host is an independent Tauri crate. On a development machine with
+Tauri prerequisites and network access, run:
+
+```text
+cargo run --manifest-path src-tauri/Cargo.toml
+```
+
+The native editor currently validates and persists layouts. Connection to the
+live controller runtime remains pending.
+
+On Linux, keep WebKitGTK, D-Bus, and the other Tauri build dependencies out of
+the host by running `just check-gui-container`. The required system packages
+and Rust crates remain in Docker-managed image and cache layers.
+
 ## Development environment
 
 No single environment manager is mandatory. A system Rust installation can be

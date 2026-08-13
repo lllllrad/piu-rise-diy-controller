@@ -33,6 +33,18 @@ hardware, Launchpad, or game.
 
 ## Missing evidence
 
+- The new Tauri host could not be compiled in the managed Linux environment:
+  crates.io downloads are blocked and no Tauri crates are cached. The shared
+  browser JavaScript passes Node syntax validation.
+- The isolated Tauri Docker check is defined in
+  `docker/tauri-linux.Dockerfile`, but this managed session cannot access the
+  Docker daemon socket. Run `just check-gui-container` in a Docker-enabled
+  development shell before treating the GUI host as compile verified.
+- Applying an editor layout to a running MIDI/keyboard controller is not yet
+  connected. Rust validation, compilation to physical controls, persistence,
+  and the mapping engine's release-before-replace operation are implemented
+  independently.
+
 - Native Windows MSVC compilation in GitHub Actions: pending CI; the equivalent
   release was cross-built and executed in Windows PE.
 - Windows scan-code `SendInput` and elevation: Bench verified in QEMU Windows

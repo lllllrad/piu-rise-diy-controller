@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PIU RISE Controller</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <div>
+        <p class="eyebrow">PIU RISE DIY CONTROLLER</p>
+        <h1>버튼 레이아웃</h1>
+      </div>
+      <div class="status"><span id="mode-dot"></span><span id="mode">확인 중</span></div>
+    </header>
+    <main>
+      <section class="toolbar panel">
+        <label>선택한 버튼에 할당</label>
+        <select id="target"></select>
+        <button id="assign">할당</button>
+        <button id="clear" class="secondary">지우기</button>
+        <button id="validate" class="secondary">검증</button>
+        <button id="apply">검증 및 저장</button>
+      </section>
+      <section class="devices">
+        <article class="panel device">
+          <div class="device-title"><h2>왼쪽 기기</h2><span>LEFT</span></div>
+          <svg id="left" class="surface" viewBox="0 0 8.9 8"></svg>
+        </article>
+        <article class="panel device">
+          <div class="device-title"><h2>메인 기기</h2><span>MAIN</span></div>
+          <svg id="main" class="surface" viewBox="0 0 8.9 8"></svg>
+        </article>
+      </section>
+      <section class="panel details">
+        <div><span class="label">선택</span><strong id="selection">없음</strong></div>
+        <div><span class="label">할당</span><strong id="binding">—</strong></div>
+        <p id="message">편집기 기반 단계입니다. 실제 실행 중인 컨트롤러에는 아직 적용되지 않습니다.</p>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

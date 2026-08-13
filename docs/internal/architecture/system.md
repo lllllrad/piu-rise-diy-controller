@@ -20,6 +20,20 @@ Logical/physical state
 
 ## Component boundaries
 
+### Device surfaces and editable layouts
+
+Persistent layouts address controls by a stable, model-specific `ControlId`,
+not by MIDI note, enumeration index, or an assumed rectangular grid. A device
+adapter supplies optional geometry for GUI rendering and the protocol address
+used when the validated layout is compiled. This supports the Mk2 gameplay
+surface currently confirmed as 72 usable controls (the 8-by-8 pad matrix plus
+eight right-edge controls) and future non-grid devices.
+
+A physical control maps to one logical action or one explicitly allowed
+two-action set. Allowed pairs are the four diagonal-plus-center overlaps on
+each side and the upper/lower pairs across the device boundary. All other
+multi-action bindings are rejected before active output state is changed.
+
 ### Device adapters
 
 Decode MIDI and encode device LEDs. They own model capabilities and protocol details, but do not know Windows keys or RISE profiles.

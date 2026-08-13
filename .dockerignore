@@ -1,0 +1,6 @@
+.git
+.agents
+.codex
+target
+src-tauri/target
+*.log

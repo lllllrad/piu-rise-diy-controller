@@ -3,6 +3,7 @@
 
 # Rust build output
 /target/
+/src-tauri/target/
 
 # Local environment and diagnostic output
 .env

@@ -4,6 +4,19 @@ The current build is an engineering MVP. It does not send model-selection
 SysEx or LED commands automatically, so identifying an old Launchpad starts
 with passive MIDI observation.
 
+## Browser layout-editor preview
+
+Open `web/index.html` directly in a current browser. It requires no install and
+shows the same two-device Mk2 surface editor embedded by the Tauri host. Browser
+mode validates supported single- and dual-panel assignments and persists the
+demo layout in browser local storage. It does not access MIDI, LEDs, or keyboard
+output.
+
+The Tauri host is in `src-tauri/`. It repeats validation in Rust and stores
+versioned layout JSON in the application configuration directory. Connecting
+the saved layout to a running physical controller is not implemented yet and
+remains `Unverified`.
+
 ## 1. Build on Windows
 
 Install the Visual Studio 2022 C++ Build Tools with a Windows SDK, then install

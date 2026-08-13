@@ -31,3 +31,7 @@ verify:
     cargo clippy --all-targets --locked -- -D warnings
     cargo test --all-targets --locked
     sh scripts/check-doc-parity.sh
+
+# Check the Tauri host without installing Linux GUI dependencies on the host.
+check-gui-container:
+    docker build --file docker/tauri-linux.Dockerfile --tag piu-rise-controller-tauri-check .
