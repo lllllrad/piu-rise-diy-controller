@@ -6,7 +6,8 @@ Build a Windows-only Rust application that turns one or two Novation Launchpads 
 
 ## Current product constraints
 
-- The Windows application is expected to run as administrator.
+- The Windows application must support normal, non-elevated execution. Document that
+  Windows blocks `SendInput` into a target running at a higher integrity level.
 - The MVP must support the owner's older Launchpad even if it is an Original/Mk1, Launchpad S, Mini Mk1/Mk2, or Launchpad Mk2. Do not assume modern RGB SysEx is available.
 - Keep modern Launchpad X, Mini Mk3, and Pro Mk3 support in the architecture, but do not let it replace legacy MVP support.
 - Actual PUMP IT UP RISE integration can only be verified by the owner on the real machine. Automated tests must validate everything up to the OS/device boundary.

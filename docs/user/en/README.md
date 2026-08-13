@@ -1,7 +1,7 @@
 # User Guide
 
 An engineering MVP is available from source. It is not yet a verified release.
-This guide covers building, administrator launch, device setup, profile
+This guide covers building, application launch, device setup, profile
 selection, diagnostics, and safe recovery.
 
 ## Planned guide sections
@@ -9,7 +9,7 @@ selection, diagnostics, and safe recovery.
 - [Compatibility](compatibility.md)
 - [Getting started and real-game test](getting-started.md)
 - [Troubleshooting and diagnostic logs](troubleshooting.md)
-- Installation and administrator launch
+- Installation and application launch
 - First-run device identification
 - 5K, 6K, and 10K profiles
 - Key mapping and configuration

@@ -24,7 +24,6 @@ pub struct KeyboardOutput;
 
 impl KeyboardOutput {
     pub fn new() -> Result<Self> {
-        ensure!(is_elevated(), "application is not running as administrator");
         Ok(Self)
     }
 

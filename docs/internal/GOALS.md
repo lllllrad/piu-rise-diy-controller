@@ -5,7 +5,7 @@
 - Provide reliable low-latency press/release input for PUMP IT UP RISE on Windows.
 - Support one Launchpad for 5K/6K and two Launchpads for 10K-oriented layouts.
 - Include legacy Launchpad support in the MVP because the initial test device is an unidentified older model.
-- Run the Windows application elevated so it can inject input into an elevated game process.
+- Run the Windows application without mandatory elevation and document Windows integrity-level restrictions.
 - Make all output backends consume the same logical action stream.
 - Allow a future RP2030 + FT232RL serial bridge that presents input to the target as USB input hardware.
 - Fail safely by releasing active outputs whenever the application still has an opportunity to recover.
@@ -25,4 +25,4 @@
 - Exact key bindings for the owner's RISE setup, especially 10K.
 - Whether `RP2030` identifies the intended MCU/module name or a project-specific board.
 - Wire protocol and firmware ownership for the RP2030 + FT232RL bridge.
-- Packaging and elevation flow: manifest-requested elevation versus an elevated launcher.
+- Whether an opt-in elevated launcher is ever needed for an elevated target process.

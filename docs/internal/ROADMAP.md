@@ -17,7 +17,7 @@ Exit condition: the device model is known or a safe capability probe can disting
 - Legacy adapters for Original/Mk1-family behavior and Launchpad Mk2 RGB behavior as required by the identified device.
 - Logical 5K and 6K profiles.
 - Reference-counted press state and Release All.
-- Administrator-elevated Windows keyboard output.
+- Non-elevated Windows keyboard output.
 - Minimal status/pressed LEDs within device capabilities.
 - Headless diagnostic mode and event trace suitable for remote debugging.
 
@@ -25,12 +25,12 @@ Exit condition: bench-verified press/release behavior, disconnect recovery, prof
 
 Implementation status: the passive monitor, legacy address-family defaults,
 5K/6K/10K mappings, shared reference-counted key state, Windows SendInput
-backend, elevation manifest, disconnect polling, daily logs, and dry-run CLI
+backend, non-elevated manifest, disconnect polling, daily logs, and dry-run CLI
 exist but remain `Unverified` until Windows CI and owner hardware tests pass.
 
 ## Phase 2: Real RISE validation
 
-- Owner tests installation, elevation, menus, gameplay holds, simultaneous inputs, and recovery on the real machine.
+- Owner tests installation, integrity-level matching, menus, gameplay holds, simultaneous inputs, and recovery on the real machine.
 - Record results as `RISE verified` per model/profile/output backend.
 - Adjust default mappings without embedding game keys in device adapters.
 

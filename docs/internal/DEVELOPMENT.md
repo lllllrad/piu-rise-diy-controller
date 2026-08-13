@@ -15,8 +15,8 @@ dependencies.
 
 ## Native development
 
-Native Windows is required for meaningful validation of administrator
-elevation, Windows input injection, MIDI hot-plug behavior, and physical
+Native Windows is required for meaningful validation of Windows integrity
+levels, input injection, MIDI hot-plug behavior, and physical
 Launchpad integration. Install the Rust version recorded in `mise.toml` using
 rustup, mise, or another toolchain manager.
 
@@ -36,8 +36,8 @@ just test
 just verify
 ```
 
-`just run` uses Cargo's debug profile. The resulting application still follows
-the Windows administrator manifest and may request elevation. Use
+`just run` uses Cargo's debug profile. The resulting application runs without
+requesting UAC elevation. Use
 `just run run --input "Launchpad" --dry-run` when exercising mappings without
 injecting keyboard input.
 

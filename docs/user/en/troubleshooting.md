@@ -30,8 +30,8 @@ device or account-specific suffix.
 
 1. Release every physical pad.
 2. Press Ctrl+C in the controller console.
-3. If the process is gone, run `piu-rise-controller release-all` from an
-   administrator console. Press and release the affected physical keyboard key
+3. If the process is gone, run `piu-rise-controller release-all`. Press and
+   release the affected physical keyboard key
    once if Windows still reports it active.
 4. Save the log and note whether shutdown, disconnect, or forced termination
    occurred.
@@ -41,8 +41,9 @@ power loss. Avoid forced termination while controls are active.
 
 ## RISE does not receive keys
 
-- Confirm `elevated=true`.
-- Confirm `output-test` in another elevated application.
+- Confirm RISE and the controller run at the same integrity level; normally
+  both should be non-elevated.
+- Confirm `output-test` in another non-elevated application.
 - Check the configured RISE key bindings.
 - Verify the controller is not still running with `--dry-run`.
 - Save both controller logs and the exact config file.

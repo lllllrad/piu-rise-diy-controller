@@ -465,7 +465,6 @@ fn run_controller(config_path: &Path, options: RunOptions) -> Result<()> {
             cfg!(windows),
             "keyboard injection requires a Windows build; use --dry-run here"
         );
-        ensure!(is_elevated(), "controller must run as administrator");
         let mut led_outputs = Vec::new();
         if two_devices && model_left == DeviceModel::Mk2 {
             let selector = left_output_selector
@@ -612,7 +611,6 @@ fn write_default_config(
 
 fn output_test(key: KeyCode, hold_ms: u64) -> Result<()> {
     ensure!(cfg!(windows), "output-test requires a Windows build");
-    ensure!(is_elevated(), "output-test must run as administrator");
     ensure!(hold_ms <= 5_000, "hold duration must not exceed 5000 ms");
     let mut output = KeyboardOutput::new()?;
     tracing::warn!(%key, hold_ms, "starting explicit keyboard output test");
@@ -625,7 +623,6 @@ fn output_test(key: KeyCode, hold_ms: u64) -> Result<()> {
 
 fn release_all_outputs(config_path: &Path) -> Result<()> {
     ensure!(cfg!(windows), "release-all requires a Windows build");
-    ensure!(is_elevated(), "release-all must run as administrator");
     let config = if config_path.is_file() {
         AppConfig::load(config_path)?
     } else {

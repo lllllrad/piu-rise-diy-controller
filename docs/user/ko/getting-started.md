@@ -27,8 +27,8 @@ Windows SDK를 포함한 Visual Studio 2022 C++ Build Tools를 설치한 다음 
 cargo build --release --locked
 ```
 
-실행 파일은 `target\release\piu-rise-controller.exe`입니다. 포함된
-매니페스트가 관리자 권한을 요청합니다.
+실행 파일은 `target\release\piu-rise-controller.exe`입니다. 현재 사용자의
+일반 권한으로 실행되며 UAC 관리자 권한을 요청하지 않습니다.
 
 ## 2. MIDI 포트와 프로토콜 계열 식별
 
@@ -120,7 +120,7 @@ Ctrl+C 종료를 확인합니다. 로그에서 모든 press에 대응하는 rele
 ## 5. 게임 밖에서 Windows 출력 테스트
 
 신뢰할 수 있는 키 이벤트 확인 프로그램이나 텍스트 편집기를 연 다음
-애플리케이션을 관리자 권한으로 실행합니다.
+일반 사용자 권한 콘솔에서 애플리케이션을 실행합니다.
 
 ```powershell
 piu-rise-controller output-test --key F --hold-ms 100
@@ -131,7 +131,7 @@ piu-rise-controller run --input "Launchpad" --model original
 요청합니다. 패드를 누른 상태에서 작업 관리자로 프로세스를 강제 종료하지
 마십시오.
 
-이전 실행이 비정상 종료됐다면 관리자 권한 콘솔에서 다음을 실행합니다.
+이전 실행이 비정상 종료됐다면 다음을 실행합니다.
 
 ```powershell
 piu-rise-controller release-all
@@ -141,7 +141,8 @@ piu-rise-controller release-all
 
 위험이 낮은 메뉴와 낮은 난이도 채보부터 시작합니다.
 
-1. `doctor`가 `elevated=true`를 출력하는지 확인합니다.
+1. RISE도 일반 사용자 권한으로 실행 중인지 확인합니다. Windows는 더 높은
+   무결성 수준의 프로세스로 보내는 `SendInput`을 차단합니다.
 2. 게임 플레이 전에 메뉴 키와 `Esc` 위치를 확인합니다.
 3. 단일 입력, 롱 노트, 동시 롱 노트 순서로 확인합니다.
 4. Ctrl+C 후 게임 키가 눌린 채 남지 않았는지 확인합니다.

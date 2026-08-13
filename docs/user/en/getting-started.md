@@ -27,8 +27,8 @@ developer shell:
 cargo build --release --locked
 ```
 
-The release executable is `target\release\piu-rise-controller.exe`. Its
-embedded manifest requests administrator privileges.
+The release executable is `target\release\piu-rise-controller.exe`. It runs
+with the current user's normal privileges and does not request UAC elevation.
 
 ## 2. Identify the MIDI port and protocol family
 
@@ -125,8 +125,8 @@ Ctrl+C shutdown. Every press must have a corresponding release in the log.
 
 ## 5. Test Windows output away from the game
 
-Open a trusted key-event viewer or text editor, then run the application as
-administrator:
+Open a trusted key-event viewer or text editor, then run the application from
+a normal, non-elevated console:
 
 ```powershell
 piu-rise-controller output-test --key F --hold-ms 100
@@ -136,7 +136,7 @@ piu-rise-controller run --input "Launchpad" --model original
 Keep the console accessible. Ctrl+C requests Release All before shutdown. Do
 not use Task Manager to terminate the application while a pad is held.
 
-If a previous run ended abnormally, start an elevated console and run:
+If a previous run ended abnormally, run:
 
 ```powershell
 piu-rise-controller release-all
@@ -146,7 +146,8 @@ piu-rise-controller release-all
 
 Start with a low-risk menu and low-difficulty chart:
 
-1. Confirm that the application reports `elevated=true` in `doctor`.
+1. Confirm that RISE is also running non-elevated. Windows blocks `SendInput`
+   into a process running at a higher integrity level.
 2. Confirm menu keys and `Esc` placement before gameplay.
 3. Test single taps, then holds, then simultaneous holds.
 4. Press Ctrl+C and confirm that no game key remains active.

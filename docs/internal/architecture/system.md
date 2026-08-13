@@ -72,4 +72,4 @@ Consumes state snapshots asynchronously. LED failures and latency must never blo
 
 ## Privilege boundary
 
-The distributed Windows application is intended to request administrator elevation. Elevation improves compatibility with an elevated target process but increases the consequences of parser, update, and path-handling vulnerabilities. MIDI and configuration inputs must still be treated as untrusted data.
+The distributed Windows application runs at the invoking user's integrity level and does not request administrator elevation. Windows `SendInput` cannot target a process at a higher integrity level, so RISE and the controller should normally run non-elevated together. MIDI and configuration inputs must still be treated as untrusted data.

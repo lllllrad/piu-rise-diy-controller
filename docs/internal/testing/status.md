@@ -1,6 +1,6 @@
 # Verification Status
 
-Last updated: 2026-08-12
+Last updated: 2026-08-13
 
 ## Automated evidence
 
@@ -12,7 +12,8 @@ Last updated: 2026-08-12
 | `sh scripts/check-doc-parity.sh` | Passed | English/Korean user-document paths |
 | Generated `original` 10K config | Passed | Schema serialization with 104 device-qualified bindings |
 | CLI help and config writer | Passed | Linux command dispatch without MIDI hardware |
-| Windows MSVC release cross-build | Passed | Rust 1.97.1, `cargo-xwin` 0.23.0, static CRT, embedded `requireAdministrator` manifest |
+| Windows MSVC release cross-build | Passed | Rust 1.97.1, `cargo-xwin` 0.23.0, static CRT; predates the non-elevated manifest change |
+| Non-elevated Windows keyboard output | Owner verified | Controller input and keyboard output worked without UAC elevation; exact Launchpad and target application were not recorded |
 | KVM/QEMU Windows boundary run | Passed: 19 tests | QEMU 10.2.1 and Windows 11 Enterprise Evaluation 25H2 WinPE; elevated CLI, MIDI enumeration with no attached device, Original 5K config write/reload, Release All, and `SendInput` press/release |
 | Windows development-host library tests | Passed: 25 tests | Two-device spatial selection, clockwise compensation for a counter-clockwise physical device, Mk2 UI relocation, overlap actions, config, and output state; no MIDI hardware attached |
 

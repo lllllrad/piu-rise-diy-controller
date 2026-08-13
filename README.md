@@ -17,7 +17,7 @@ IT UP RISE machine.
 
 ## Current scope
 
-- Windows application, run with administrator privileges
+- Windows application with normal, non-elevated execution
 - MIDI input from legacy and modern Novation Launchpads
 - 5K, 6K, and later 10K logical profiles
 - Windows keyboard output first

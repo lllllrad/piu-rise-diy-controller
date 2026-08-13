@@ -20,18 +20,18 @@
 
 ### Windows integration tests
 
-- Elevated launch and configuration access.
+- Non-elevated launch and configuration access.
 - Key down/up and simultaneous-key observation in a dedicated test receiver.
 - MIDI hot-plug, reconnect, and port-pairing behavior.
 - Clean shutdown, recoverable failure, and panic cleanup where execution continues long enough to clean up.
-- Embedded `requireAdministrator` manifest inspection in the release executable.
+- Embedded `asInvoker` manifest inspection in the release executable.
 - MIDI-port disappearance detection and Release All within the polling interval.
 
 OS integration tests cannot prove cleanup after unconditional process termination or power loss. This limitation must remain documented.
 
-The Windows release CI scans the built PE resource bytes for
-`requireAdministrator`. This is a packaging guard, not proof that UAC or
-SendInput succeeds on the target machine.
+The Windows release CI should scan the built PE resource bytes for `asInvoker`.
+This is a packaging guard, not proof that `SendInput` succeeds on the target
+machine or crosses Windows integrity levels.
 
 ### Hardware bench tests
 
