@@ -171,10 +171,10 @@ fn default_keys() -> BTreeMap<LogicalAction, String> {
         (P1UpRight, "K".into()),
         (P1DownRight, "L".into()),
         (P2DownLeft, "Z".into()),
-        (P2UpLeft, "X".into()),
-        (P2Center, "C".into()),
-        (P2UpRight, "V".into()),
-        (P2DownRight, "B".into()),
+        (P2UpLeft, "Q".into()),
+        (P2Center, "S".into()),
+        (P2UpRight, "E".into()),
+        (P2DownRight, "C".into()),
         (Lane1, "S".into()),
         (Lane2, "D".into()),
         (Lane3, "F".into()),
@@ -223,6 +223,16 @@ mod tests {
         assert_eq!(actual.schema_version, expected.schema_version);
         assert_eq!(actual.keys, expected.keys);
         std::fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn default_main_panel_keys_match_rise_ten_panel_setup() {
+        let config = AppConfig::default();
+        assert_eq!(config.keys[&LogicalAction::P2DownLeft], "Z");
+        assert_eq!(config.keys[&LogicalAction::P2UpLeft], "Q");
+        assert_eq!(config.keys[&LogicalAction::P2Center], "S");
+        assert_eq!(config.keys[&LogicalAction::P2UpRight], "E");
+        assert_eq!(config.keys[&LogicalAction::P2DownRight], "C");
     }
 
     #[test]

@@ -15,13 +15,21 @@
       <div class="status"><span id="mode-dot"></span><span id="mode">확인 중</span></div>
     </header>
     <main>
+      <section class="toolbar panel runtime">
+        <label>왼쪽 MIDI</label><select id="left-input"></select>
+        <label>메인 MIDI</label><select id="main-input"></select>
+        <button id="refresh-ports" class="secondary">새로고침</button>
+        <button id="start-controller">컨트롤러 시작</button>
+        <button id="stop-controller" class="secondary">중지</button>
+        <span id="runtime-status">중지됨</span>
+      </section>
       <section class="toolbar panel">
         <label>선택한 버튼에 할당</label>
         <select id="target"></select>
         <button id="assign">할당</button>
         <button id="clear" class="secondary">지우기</button>
         <button id="validate" class="secondary">검증</button>
-        <button id="apply">검증 및 저장</button>
+        <button id="apply">적용 및 저장</button>
       </section>
       <section class="devices">
         <article class="panel device">
@@ -36,7 +44,8 @@
       <section class="panel details">
         <div><span class="label">선택</span><strong id="selection">없음</strong></div>
         <div><span class="label">할당</span><strong id="binding">—</strong></div>
-        <p id="message">편집기 기반 단계입니다. 실제 실행 중인 컨트롤러에는 아직 적용되지 않습니다.</p>
+        <p id="message">MIDI 포트를 선택하고 컨트롤러를 시작하거나 레이아웃을 편집하세요.</p>
+        <p class="shortcuts">방향키: 버튼 이동 · Ctrl+C: 할당 복사 · Ctrl+V: 할당 붙여넣기 · Delete: 할당 지우기</p>
       </section>
     </main>
     <script src="app.js"></script>

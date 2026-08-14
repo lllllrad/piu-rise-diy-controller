@@ -34,17 +34,18 @@ hardware, Launchpad, or game.
 
 ## Missing evidence
 
-- The new Tauri host could not be compiled in the managed Linux environment:
-  crates.io downloads are blocked and no Tauri crates are cached. The shared
-  browser JavaScript passes Node syntax validation.
+- The current Tauri host could not be compiled in the managed Linux
+  environment because its WebKitGTK/D-Bus development packages are deliberately
+  not installed on the host. The shared browser JavaScript passes Node syntax
+  validation.
 - The isolated Tauri Docker check is defined in
   `docker/tauri-linux.Dockerfile`, but this managed session cannot access the
   Docker daemon socket. Run `just check-gui-container` in a Docker-enabled
   development shell before treating the GUI host as compile verified.
-- Applying an editor layout to a running MIDI/keyboard controller is not yet
-  connected. Rust validation, compilation to physical controls, persistence,
-  and the mapping engine's release-before-replace operation are implemented
-  independently.
+- The GUI now owns MIDI input and live mapping directly and delegates only
+  `SendInput` transitions to an elevated helper. UAC launch, helper
+  authentication, disconnect Release All, live layout replacement, and the
+  keyboard editor interactions remain Unverified on Windows.
 
 - Native Windows MSVC compilation in GitHub Actions: pending CI; the equivalent
   release was cross-built and executed in Windows PE.

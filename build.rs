@@ -19,4 +19,16 @@ fn main() {
         "cargo:rustc-link-arg-bin=piu-rise-controller=/MANIFESTINPUT:{}",
         manifest.display()
     );
+
+    let helper_manifest = manifest
+        .parent()
+        .expect("manifest parent")
+        .join("output-helper.manifest");
+    println!("cargo:rerun-if-changed={}", helper_manifest.display());
+    println!("cargo:rustc-link-arg-bin=piu-rise-output-helper=/MANIFESTUAC:NO");
+    println!("cargo:rustc-link-arg-bin=piu-rise-output-helper=/MANIFEST:EMBED");
+    println!(
+        "cargo:rustc-link-arg-bin=piu-rise-output-helper=/MANIFESTINPUT:{}",
+        helper_manifest.display()
+    );
 }

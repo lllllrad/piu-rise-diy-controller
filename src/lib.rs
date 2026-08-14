@@ -2,6 +2,7 @@ pub mod action;
 pub mod config;
 pub mod engine;
 pub mod event;
+pub mod helper;
 pub mod layout;
 pub mod led;
 pub mod midi;

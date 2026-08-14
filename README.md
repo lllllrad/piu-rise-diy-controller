@@ -32,19 +32,24 @@ Open `web/index.html` in a current browser to inspect the shared layout editor
 without installing anything. Browser mode uses a demo backend and never sends
 MIDI or keyboard output.
 
-The native host is an independent Tauri crate. On a development machine with
-Tauri prerequisites and network access, run:
+The native host is an independent Tauri crate. On Windows, build its elevated
+keyboard-output helper and run the normal-privilege GUI with:
 
 ```text
-cargo run --manifest-path src-tauri/Cargo.toml
+just gui-dev
 ```
 
-The native editor currently validates and persists layouts. Connection to the
-live controller runtime remains pending.
+The GUI owns MIDI discovery, live mapping, layout changes, and persistent
+layout state directly; it does not invoke the CLI executable. Physical GUI and
+RISE behavior remains unverified.
 
 On Linux, keep WebKitGTK, D-Bus, and the other Tauri build dependencies out of
 the host by running `just check-gui-container`. The required system packages
 and Rust crates remain in Docker-managed image and cache layers.
+
+Other common entry points are `just gui-check`, `just gui-build`,
+`just gui-release`, and `just web-preview`. Run `just --list` for the complete
+command index. Direct Cargo commands remain supported as a fallback.
 
 ## Development environment
 

@@ -13,9 +13,29 @@
 않습니다.
 
 Tauri 호스트는 `src-tauri/`에 있습니다. Rust에서 레이아웃을 다시 검증하고
-버전이 있는 JSON을 애플리케이션 설정 디렉터리에 저장합니다. 저장된
-레이아웃을 실행 중인 실제 컨트롤러에 연결하는 기능은 아직 구현되지 않았으며
+버전이 있는 JSON을 애플리케이션 설정 디렉터리에 저장합니다. GUI의 실제 MIDI
+및 키보드 동작은 Windows에서 Mk2 두 대와 RISE로 시험하기 전까지
 `Unverified`입니다.
+
+## Windows GUI 실행
+
+저장소 루트에서 관리자 출력 helper를 빌드한 다음 일반 권한 Tauri 앱을
+실행합니다.
+
+```powershell
+just gui-dev
+```
+
+실행하지 않고 검사하거나 빌드할 때는 각각 `just gui-check`, `just gui-build`,
+`just gui-release`를 사용합니다. `just web-preview`는 브라우저 전용 화면을
+`http://127.0.0.1:8000/`에서 제공합니다. `just`를 사용할 수 없을 때만 직접
+Cargo 명령을 대체 경로로 사용합니다.
+
+GUI가 MIDI 입력 두 개를 직접 검색하고 연결하며 CLI 실행 파일을 호출하지
+않습니다. 컨트롤러를 시작할 때 키보드 출력 helper에만 UAC가 표시됩니다.
+중지, 출력 실패 및 새 레이아웃 적용 시 Release All을 요청합니다. surface
+버튼을 선택한 뒤 방향키로 이동하고, `Ctrl+C`/`Ctrl+V`로 할당을
+복사·붙여넣으며, `Delete`로 할당을 지울 수 있습니다.
 
 ## 1. Windows에서 빌드
 
@@ -70,7 +90,7 @@ piu-rise-controller write-default-config --model mk2 --two-devices --force
 `device.input_port`를 MIDI 입력 포트 하나만 식별하는 값으로 수정하고,
 Windows 출력을 활성화하기 전에 모든 키와 binding을 검토합니다.
 장치 두 대를 쓰면 `device.input_port_right`도 설정합니다. `device = 0` binding은
-왼쪽, `device = 1` binding은 오른쪽 장치입니다. P2 예제 키 `Z X C V B`는
+왼쪽, `device = 1` binding은 오른쪽 장치입니다. P2 예제 키 `Z Q S E C`는
 RISE 키 설정에서도 동일하게 연결해야 합니다.
 
 ## 4. 전체 매핑 dry-run

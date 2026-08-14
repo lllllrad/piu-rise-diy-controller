@@ -13,9 +13,29 @@ demo layout in browser local storage. It does not access MIDI, LEDs, or keyboard
 output.
 
 The Tauri host is in `src-tauri/`. It repeats validation in Rust and stores
-versioned layout JSON in the application configuration directory. Connecting
-the saved layout to a running physical controller is not implemented yet and
-remains `Unverified`.
+versioned layout JSON in the application configuration directory. Its live
+MIDI and keyboard behavior remains `Unverified` until tested on Windows with
+the physical Mk2 pair and RISE.
+
+## Run the Windows GUI
+
+From the repository root, build the small elevated output helper and start the
+normal-privilege Tauri application:
+
+```powershell
+just gui-dev
+```
+
+Use `just gui-check`, `just gui-build`, or `just gui-release` for the
+corresponding non-running workflows. `just web-preview` serves the browser-only
+preview at `http://127.0.0.1:8000/`. Direct Cargo commands are fallback paths
+when `just` is unavailable.
+
+The GUI discovers and opens the two MIDI inputs itself; it does not invoke the
+CLI executable. Starting the controller displays UAC only for the keyboard
+output helper. Stopping, output failure, and applying a new layout request
+Release All. Select a surface control and use the arrow keys to move,
+`Ctrl+C`/`Ctrl+V` to copy and paste its assignment, and `Delete` to clear it.
 
 ## 1. Build on Windows
 
@@ -70,7 +90,7 @@ Run `piu-rise-controller doctor` to print the exact config and log paths. Edit
 `device.input_port` so it uniquely matches the MIDI input port. Review every
 key and binding before enabling Windows output. For the two-device layout, also set
 `device.input_port_right`; bindings with `device = 0` are the left side and
-`device = 1` are the right side. The example P2 keys are `Z X C V B` and must
+`device = 1` are the right side. The example P2 keys are `Z Q S E C` and must
 be matched in RISE key settings.
 
 ## 4. Dry-run the complete mapping
