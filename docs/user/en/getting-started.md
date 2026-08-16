@@ -31,6 +31,11 @@ corresponding non-running workflows. `just web-preview` serves the browser-only
 preview at `http://127.0.0.1:8000/`. Direct Cargo commands are fallback paths
 when `just` is unavailable.
 
+In a DIM workspace with the External URLs plugin and a configured ingress,
+`just web-preview-external INGRESS` starts the browser preview in DIND and
+prints the externally reachable URL response. The ingress defaults to
+`local-http`. Run `just web-preview-external-stop` to stop its container.
+
 The GUI discovers and opens the two MIDI inputs itself; it does not invoke the
 CLI executable. Starting the controller displays UAC only for the keyboard
 output helper. Stopping, output failure, and applying a new layout request

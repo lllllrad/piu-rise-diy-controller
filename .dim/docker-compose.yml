@@ -8,6 +8,7 @@ services:
       DIM_WORKSPACE_BACKEND: "${DIM_WORKSPACE_BACKEND:-unknown}"
       DIM_GIT_USERNAME: "${DIM_GIT_USERNAME:?}"
       DIM_GIT_TOKEN: "${DIM_GIT_TOKEN:?}"
+      DIM_CONTROLLER_SOCKET: /run/dim/controller-proxy/external-url.sock
       GIT_AUTHOR_NAME: "${GIT_AUTHOR_NAME:-}"
       GIT_AUTHOR_EMAIL: "${GIT_AUTHOR_EMAIL:-}"
       GIT_COMMITTER_NAME: "${GIT_COMMITTER_NAME:-}"
@@ -20,6 +21,7 @@ services:
     volumes:
       - ..:/workspace
       - agent-dind-shared:/mnt/workspace-shared-dind
+      - /tmp/dim-controller-proxy:/run/dim/controller-proxy:ro
     networks:
       - default
       - agent-dind

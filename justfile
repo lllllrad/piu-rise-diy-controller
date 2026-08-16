@@ -62,3 +62,24 @@ gui-release:
 # Serve the install-free browser preview at http://127.0.0.1:8000/.
 web-preview port="8000":
     node scripts/serve-web.mjs {{port}}
+
+# Start the browser preview in DIND and expose it through a DIM External URL ingress.
+web-preview-external ingress="local-http":
+    #!/usr/bin/env sh
+    set -eu
+    ingress={{quote(ingress)}}
+    socket="${DIM_CONTROLLER_SOCKET:-/run/dim/controller-proxy/external-url.sock}"
+    if [ ! -S "$socket" ]; then
+        echo "DIM External URL proxy is unavailable; configure an ingress and rerun .dim/setup.sh." >&2
+        exit 1
+    fi
+    docker compose --project-name piu-rise-web-preview --file .dim/web-preview.compose.yml up --detach --build
+    curl --fail --silent --show-error \
+        --unix-socket "$socket" \
+        --header "Content-Type: application/json" \
+        --data "$(node -e 'process.stdout.write(JSON.stringify({ingress:process.argv[1],target:{containers:[\"agent-dind\",\"web-preview\"],port:80,protocol:\"http\"}}))' "$ingress")" \
+        http://dim-controller/api/urls
+
+# Stop the DIND browser preview container. Existing External URLs remain revocable through DIM.
+web-preview-external-stop:
+    docker compose --project-name piu-rise-web-preview --file .dim/web-preview.compose.yml down

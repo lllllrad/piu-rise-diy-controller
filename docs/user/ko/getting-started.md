@@ -31,6 +31,12 @@ just gui-dev
 `http://127.0.0.1:8000/`에서 제공합니다. `just`를 사용할 수 없을 때만 직접
 Cargo 명령을 대체 경로로 사용합니다.
 
+External URLs 플러그인과 ingress가 구성된 DIM workspace에서는
+`just web-preview-external INGRESS`로 DIND 안에서 브라우저 미리보기를
+시작하고 외부 접속 URL 응답을 출력할 수 있습니다. ingress 기본값은
+`local-http`입니다. 컨테이너를 중지하려면 `just web-preview-external-stop`을
+실행합니다.
+
 GUI가 MIDI 입력 두 개를 직접 검색하고 연결하며 CLI 실행 파일을 호출하지
 않습니다. 컨트롤러를 시작할 때 키보드 출력 helper에만 UAC가 표시됩니다.
 중지, 출력 실패 및 새 레이아웃 적용 시 Release All을 요청합니다. surface

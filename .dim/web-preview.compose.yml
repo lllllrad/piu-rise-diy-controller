@@ -1,0 +1,8 @@
+services:
+  web-preview:
+    build:
+      context: ..
+      dockerfile: .dim/web-preview.Dockerfile
+    image: piu-rise-web-preview:local
+    ports:
+      - "80"
