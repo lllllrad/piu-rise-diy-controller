@@ -9,6 +9,10 @@ export GIT_AUTHOR_EMAIL="$git_email"
 export GIT_COMMITTER_NAME="$git_name"
 export GIT_COMMITTER_EMAIL="$git_email"
 
+origin_url="$(git remote get-url origin)"
+origin_repository="$(basename "$origin_url")"
+git remote set-url origin "${DIM_GIT_BASE_URL:?DIM_GIT_BASE_URL is required}/$origin_repository"
+
 proxy_dir="/tmp/dim-controller-proxy"
 proxy_socket="$proxy_dir/external-url.sock"
 proxy_log="$proxy_dir/external-url.log"

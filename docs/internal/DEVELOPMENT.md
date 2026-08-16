@@ -99,6 +99,10 @@ the host level. The agent image pins Rust 1.97 and Docker CLI/DinD 29.1.3.
 `bootstrap` reports the preinstalled tool versions; it does not modify the
 host. `check-gui-container` uses the agent's private Docker daemon.
 
+The setup rewrites the checkout's `origin` to the routable
+`DIM_GIT_BASE_URL` supplied by DIM and passes that URL into the nested agent.
+Nested services cannot resolve the workspace-root-only `dim-gitea` hostname.
+
 ## Verification boundaries
 
 Passing tests in mise or DIM is software verification only. It does not change

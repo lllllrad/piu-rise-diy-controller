@@ -8,6 +8,7 @@ services:
       DIM_WORKSPACE_BACKEND: "${DIM_WORKSPACE_BACKEND:-unknown}"
       DIM_GIT_USERNAME: "${DIM_GIT_USERNAME:?}"
       DIM_GIT_TOKEN: "${DIM_GIT_TOKEN:?}"
+      DIM_GIT_BASE_URL: "${DIM_GIT_BASE_URL:?}"
       DIM_CONTROLLER_SOCKET: /run/dim/controller-proxy/external-url.sock
       GIT_AUTHOR_NAME: "${GIT_AUTHOR_NAME:-}"
       GIT_AUTHOR_EMAIL: "${GIT_AUTHOR_EMAIL:-}"
