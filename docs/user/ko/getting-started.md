@@ -97,9 +97,8 @@ piu-rise-controller write-default-config --model mk2 --two-devices --force
 Windows 출력을 활성화하기 전에 모든 키와 binding을 검토합니다.
 장치 두 대를 쓰면 `device.input_port_right`도 설정합니다. `device = 0` binding은
 왼쪽, `device = 1` binding은 오른쪽 장치입니다. 왼쪽 P2 기본 키는 `Z Q S E C`입니다.
-오른쪽 P1 기본 키는 서로 겹치지 않으며 같은 발판 모양의 숫자패드 키
-`NUMPAD1 NUMPAD7 NUMPAD5 NUMPAD9 NUMPAD3`를 사용합니다. 두 키 묶음을 RISE 키 설정에서도
-동일하게 연결해야 합니다.
+오른쪽 P1 기본 키는 서로 겹치지 않으며 같은 발판 모양의 문자 키 `V R G Y N`을
+사용합니다. 두 키 묶음을 RISE 키 설정에서도 동일하게 연결해야 합니다.
 
 ## 4. 전체 매핑 dry-run
 

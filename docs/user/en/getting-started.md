@@ -96,8 +96,8 @@ Run `piu-rise-controller doctor` to print the exact config and log paths. Edit
 key and binding before enabling Windows output. For the two-device layout, also set
 `device.input_port_right`; bindings with `device = 0` are the left side and
 `device = 1` are the right side. The default left-side P2 keys are `Z Q S E C`.
-The non-overlapping right-side P1 keys use the matching numpad shape:
-`NUMPAD1 NUMPAD7 NUMPAD5 NUMPAD9 NUMPAD3`. Match both sets in RISE key settings.
+The non-overlapping right-side P1 keys use the matching letter-key shape:
+`V R G Y N`. Match both sets in RISE key settings.
 
 ## 4. Dry-run the complete mapping
 
