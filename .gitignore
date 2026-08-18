@@ -5,6 +5,9 @@
 /target/
 /src-tauri/target/
 
+# Tauri-generated capability schemas
+/src-tauri/gen/schemas/
+
 # Local environment and diagnostic output
 .env
 .env.*
