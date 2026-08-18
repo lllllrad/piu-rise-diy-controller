@@ -95,8 +95,9 @@ Run `piu-rise-controller doctor` to print the exact config and log paths. Edit
 `device.input_port` so it uniquely matches the MIDI input port. Review every
 key and binding before enabling Windows output. For the two-device layout, also set
 `device.input_port_right`; bindings with `device = 0` are the left side and
-`device = 1` are the right side. The example P2 keys are `Z Q S E C` and must
-be matched in RISE key settings.
+`device = 1` are the right side. The default left-side P2 keys are `Z Q S E C`.
+The non-overlapping right-side P1 keys use the matching numpad shape:
+`NUMPAD1 NUMPAD7 NUMPAD5 NUMPAD9 NUMPAD3`. Match both sets in RISE key settings.
 
 ## 4. Dry-run the complete mapping
 
@@ -129,7 +130,7 @@ counter-clockwise-rotated additional device with `--input-left`/
 `--input-left-index`.
 Providing a second input always selects the 10-panel layout; it may also be
 used for RISE 6K by editing the ten output key assignments. The left device
-uses the full P1 five-panel layout and the right uses the full P2 layout.
+uses the full P2 five-panel layout and the right uses the full P1 layout.
 A clockwise coordinate compensation is applied to both input and LED addresses
 for the physically counter-clockwise left device.
 

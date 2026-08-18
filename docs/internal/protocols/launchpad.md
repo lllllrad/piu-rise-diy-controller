@@ -47,9 +47,9 @@ messages to the 64 grid LEDs. This does not run in the input dispatch path.
 | `modern` | Bottom-left is Note 11; rows advance by 10 | CC 91..98 | Right CC 19, 29, ..., 89 | Unverified |
 
 Five-key uses a spatial panel layout. Six-key uses vertical lanes. Ten-key
-assigns device 0 to P1 and device 1 to P2 and routes both through one shared
-output reference-count state. Configuration bindings can replace every
-default assumption.
+assigns device 0 to P2 (left) and device 1 to P1 (right), then routes both
+through one shared output reference-count state. Configuration bindings can
+replace every default assumption.
 
 Original Launchpad coordinates are based on the official X-Y mapping. Mk2 and
 modern defaults remain bench-unverified in this repository even where their

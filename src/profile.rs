@@ -171,7 +171,7 @@ fn actions_at(profile: Profile, device: u8, x: u8, y: u8, two_devices: bool) -> 
         },
         Profile::TenKey => {
             let player_one = five_key_actions_at(x, y);
-            if device == 0 {
+            if device == 1 {
                 player_one
             } else {
                 player_one
@@ -336,11 +336,16 @@ mod tests {
     }
 
     #[test]
-    fn ten_key_assigns_second_device_to_player_two() {
-        let bindings = default_bindings_for_device(DeviceModel::Mk2, Profile::TenKey, 1);
-        let mut control = grid_control(DeviceModel::Mk2, 0, 0).unwrap();
-        control.device = 1;
-        assert_eq!(bindings[&control], vec![LogicalAction::P2DownLeft]);
+    fn ten_key_assigns_left_to_player_two_and_right_to_player_one() {
+        for (device, action) in [
+            (0, LogicalAction::P2DownLeft),
+            (1, LogicalAction::P1DownLeft),
+        ] {
+            let bindings = default_bindings_for_device(DeviceModel::Mk2, Profile::TenKey, device);
+            let mut control = grid_control(DeviceModel::Mk2, 0, 0).unwrap();
+            control.device = device;
+            assert_eq!(bindings[&control], vec![action]);
+        }
     }
 
     #[test]

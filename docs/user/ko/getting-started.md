@@ -96,8 +96,10 @@ piu-rise-controller write-default-config --model mk2 --two-devices --force
 `device.input_port`를 MIDI 입력 포트 하나만 식별하는 값으로 수정하고,
 Windows 출력을 활성화하기 전에 모든 키와 binding을 검토합니다.
 장치 두 대를 쓰면 `device.input_port_right`도 설정합니다. `device = 0` binding은
-왼쪽, `device = 1` binding은 오른쪽 장치입니다. P2 예제 키 `Z Q S E C`는
-RISE 키 설정에서도 동일하게 연결해야 합니다.
+왼쪽, `device = 1` binding은 오른쪽 장치입니다. 왼쪽 P2 기본 키는 `Z Q S E C`입니다.
+오른쪽 P1 기본 키는 서로 겹치지 않으며 같은 발판 모양의 숫자패드 키
+`NUMPAD1 NUMPAD7 NUMPAD5 NUMPAD9 NUMPAD3`를 사용합니다. 두 키 묶음을 RISE 키 설정에서도
+동일하게 연결해야 합니다.
 
 ## 4. 전체 매핑 dry-run
 
@@ -124,7 +126,7 @@ Mk2 오른쪽 측면 버튼은 사용하지 않습니다. 6K 또는 10K에서 �
 정상 방향인 오른쪽 메인 장치는 `--input`/`--input-index`, 반시계 방향으로 회전한 추가
 장치는 `--input-left`/`--input-left-index`로 지정합니다. 왼쪽 입력을 지정하면 항상
 10패널 배치를 사용합니다. RISE 6K에서도 열 개 출력 키 설정을 필요에 맞게 수정해 이 배치를
-그대로 사용할 수 있습니다. 왼쪽 장치는 P1 5패널 전체를, 오른쪽 장치는 P2 5패널 전체를
+그대로 사용할 수 있습니다. 왼쪽 장치는 P2 5패널 전체를, 오른쪽 장치는 P1 5패널 전체를
 사용합니다. 물리적으로 반시계 방향인 왼쪽 장치의 입력과 LED 주소에는 시계 방향 보정 변환을
 적용합니다.
 

@@ -78,6 +78,16 @@ impl KeyCode {
             "F10" => 0x79,
             "F11" => 0x7A,
             "F12" => 0x7B,
+            "NUMPAD0" => 0x60,
+            "NUMPAD1" => 0x61,
+            "NUMPAD2" => 0x62,
+            "NUMPAD3" => 0x63,
+            "NUMPAD4" => 0x64,
+            "NUMPAD5" => 0x65,
+            "NUMPAD6" => 0x66,
+            "NUMPAD7" => 0x67,
+            "NUMPAD8" => 0x68,
+            "NUMPAD9" => 0x69,
             single if single.len() == 1 => {
                 let character = single.chars().next().context("missing key character")?;
                 if character.is_ascii_alphanumeric() {
@@ -116,6 +126,7 @@ mod tests {
     fn parses_named_letter_and_hex_keys() {
         assert_eq!(KeyCode::parse("escape").unwrap().0, 0x1B);
         assert_eq!(KeyCode::parse("s").unwrap().0, 0x53);
+        assert_eq!(KeyCode::parse("numpad1").unwrap().0, 0x61);
         assert_eq!(KeyCode::parse("0xBA").unwrap().0, 0xBA);
     }
 

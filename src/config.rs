@@ -165,11 +165,11 @@ fn default_keys() -> BTreeMap<LogicalAction, String> {
         UiLeft, UiMenu, UiMultiplay, UiRight, UiSort, UiTypeToggle, UiUp,
     };
     BTreeMap::from([
-        (P1DownLeft, "S".into()),
-        (P1UpLeft, "D".into()),
-        (P1Center, "F".into()),
-        (P1UpRight, "K".into()),
-        (P1DownRight, "L".into()),
+        (P1DownLeft, "NUMPAD1".into()),
+        (P1UpLeft, "NUMPAD7".into()),
+        (P1Center, "NUMPAD5".into()),
+        (P1UpRight, "NUMPAD9".into()),
+        (P1DownRight, "NUMPAD3".into()),
         (P2DownLeft, "Z".into()),
         (P2UpLeft, "Q".into()),
         (P2Center, "S".into()),
@@ -228,6 +228,11 @@ mod tests {
     #[test]
     fn default_main_panel_keys_match_rise_ten_panel_setup() {
         let config = AppConfig::default();
+        assert_eq!(config.keys[&LogicalAction::P1DownLeft], "NUMPAD1");
+        assert_eq!(config.keys[&LogicalAction::P1UpLeft], "NUMPAD7");
+        assert_eq!(config.keys[&LogicalAction::P1Center], "NUMPAD5");
+        assert_eq!(config.keys[&LogicalAction::P1UpRight], "NUMPAD9");
+        assert_eq!(config.keys[&LogicalAction::P1DownRight], "NUMPAD3");
         assert_eq!(config.keys[&LogicalAction::P2DownLeft], "Z");
         assert_eq!(config.keys[&LogicalAction::P2UpLeft], "Q");
         assert_eq!(config.keys[&LogicalAction::P2Center], "S");
