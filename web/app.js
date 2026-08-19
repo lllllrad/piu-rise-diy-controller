@@ -137,4 +137,4 @@ async function startController(){
 }
 async function stopController(){if(!invoke)return;try{renderRuntimeStatus(await invoke("stop_controller"));message("모든 출력을 해제하고 중지했습니다.",true)}catch(error){message(String(error),false)}}
 async function updateRuntimeStatus(){if(invoke)try{renderRuntimeStatus(await invoke("controller_status"))}catch(error){message(String(error),false)}}
-function renderRuntimeStatus(status){document.querySelector("#runtime-status").textContent=status.running?"실행 중 · 출력 helper 관리자 권한":"중지됨";if(status.last_error)message(status.last_error,false)}
+function renderRuntimeStatus(status){document.querySelector("#runtime-status").textContent=status.running?"실행 중 · 일반 권한 출력":"중지됨";if(status.last_error)message(status.last_error,false)}

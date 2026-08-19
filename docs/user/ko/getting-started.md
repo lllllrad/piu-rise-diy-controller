@@ -19,7 +19,7 @@ Tauri 호스트는 `src-tauri/`에 있습니다. Rust에서 레이아웃을 다�
 
 ## Windows GUI 실행
 
-저장소 루트에서 관리자 출력 helper를 빌드한 다음 일반 권한 Tauri 앱을
+저장소 루트에서 일반 권한 출력 helper를 빌드한 다음 일반 권한 Tauri 앱을
 실행합니다.
 
 ```powershell
@@ -38,7 +38,7 @@ External URLs 플러그인과 ingress가 구성된 DIM workspace에서는
 실행합니다.
 
 GUI가 MIDI 입력 두 개를 직접 검색하고 연결하며 CLI 실행 파일을 호출하지
-않습니다. 컨트롤러를 시작할 때 키보드 출력 helper에만 UAC가 표시됩니다.
+않습니다. 키보드 출력 helper도 일반 권한으로 실행되므로 컨트롤러를 시작할 때 UAC가 표시되지 않습니다.
 중지, 출력 실패 및 새 레이아웃 적용 시 Release All을 요청합니다. surface
 버튼을 선택한 뒤 방향키로 이동하고, `Ctrl+C`/`Ctrl+V`로 할당을
 복사·붙여넣으며, `Delete`로 할당을 지울 수 있습니다.

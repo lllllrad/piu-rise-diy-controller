@@ -19,7 +19,7 @@ the physical Mk2 pair and RISE.
 
 ## Run the Windows GUI
 
-From the repository root, build the small elevated output helper and start the
+From the repository root, build the normal-privilege output helper and start the
 normal-privilege Tauri application:
 
 ```powershell
@@ -37,8 +37,8 @@ prints the externally reachable URL response. The ingress defaults to
 `local-http`. Run `just web-preview-external-stop` to stop its container.
 
 The GUI discovers and opens the two MIDI inputs itself; it does not invoke the
-CLI executable. Starting the controller displays UAC only for the keyboard
-output helper. Stopping, output failure, and applying a new layout request
+CLI executable. The keyboard output helper also runs with normal privileges,
+so starting the controller does not display UAC. Stopping, output failure, and applying a new layout request
 Release All. Select a surface control and use the arrow keys to move,
 `Ctrl+C`/`Ctrl+V` to copy and paste its assignment, and `Delete` to clear it.
 

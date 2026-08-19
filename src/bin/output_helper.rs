@@ -9,7 +9,7 @@ use piu_rise_controller::{
     action::KeyCode,
     helper::{HelperCommand, HelperReply},
     output::OutputBackend,
-    platform::{KeyboardOutput, is_elevated},
+    platform::KeyboardOutput,
 };
 
 fn main() {
@@ -21,10 +21,6 @@ fn main() {
 
 fn run() -> Result<()> {
     ensure!(cfg!(windows), "output helper is Windows-only");
-    ensure!(
-        is_elevated(),
-        "output helper requires administrator privileges"
-    );
     let mut args = std::env::args().skip(1);
     let address = args.next().context("missing callback address")?;
     let expected_token = args.next().context("missing authentication token")?;

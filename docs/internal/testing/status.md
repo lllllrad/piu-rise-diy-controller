@@ -43,14 +43,14 @@ hardware, Launchpad, or game.
   Docker daemon socket. Run `just check-gui-container` in a Docker-enabled
   development shell before treating the GUI host as compile verified.
 - The GUI now owns MIDI input and live mapping directly and delegates only
-  `SendInput` transitions to an elevated helper. UAC launch, helper
+  `SendInput` transitions to a normal-privilege helper. Helper
   authentication, disconnect Release All, live layout replacement, and the
   keyboard editor interactions remain Unverified on Windows.
 
 - Native Windows MSVC compilation in GitHub Actions: pending CI; the equivalent
   release was cross-built and executed in Windows PE.
 - Windows scan-code `SendInput` and elevation: Bench verified in QEMU Windows
-  PE. Desktop focus behavior, UAC prompting, and the console control handler
+  PE. Desktop focus behavior and the console control handler
   remain Unverified.
 - MIDI enumeration and hot-unplug polling with a physical device: Unverified.
 - Two-Mk2 indexed input/output pairing, counter-clockwise physical placement,

@@ -27,7 +27,7 @@ impl HelperOutput {
             std::process::id(),
             SystemTime::now().duration_since(UNIX_EPOCH)?.as_nanos()
         );
-        launch_elevated(&helper_path()?, &address.to_string(), &token)?;
+        launch_helper(&helper_path()?, &address.to_string(), &token)?;
         listener.set_nonblocking(true)?;
         let deadline = Instant::now() + Duration::from_secs(60);
         let stream = loop {
@@ -42,7 +42,7 @@ impl HelperOutput {
                 Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
                     ensure!(
                         Instant::now() < deadline,
-                        "timed out waiting for administrator approval"
+                        "timed out waiting for keyboard output helper"
                     );
                     std::thread::sleep(Duration::from_millis(50));
                 }
@@ -126,32 +126,20 @@ fn helper_path() -> Result<PathBuf> {
 }
 
 #[cfg(windows)]
-fn launch_elevated(executable: &Path, address: &str, token: &str) -> Result<()> {
-    use std::os::windows::ffi::OsStrExt;
-    use windows_sys::Win32::UI::{Shell::ShellExecuteW, WindowsAndMessaging::SW_HIDE};
-    let wide = |value: &std::ffi::OsStr| value.encode_wide().chain(Some(0)).collect::<Vec<_>>();
-    let verb = wide(std::ffi::OsStr::new("runas"));
-    let executable = wide(executable.as_os_str());
-    let parameters = wide(std::ffi::OsStr::new(&format!("{address} {token}")));
-    // SAFETY: all strings are valid null-terminated UTF-16 buffers retained through the call.
-    let result = unsafe {
-        ShellExecuteW(
-            std::ptr::null_mut(),
-            verb.as_ptr(),
-            executable.as_ptr(),
-            parameters.as_ptr(),
-            std::ptr::null(),
-            SW_HIDE,
-        )
-    };
-    ensure!(
-        (result as isize) > 32,
-        "administrator launch was cancelled or failed ({result:?})"
-    );
+fn launch_helper(executable: &Path, address: &str, token: &str) -> Result<()> {
+    use std::{os::windows::process::CommandExt, process::Command};
+
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    Command::new(executable)
+        .arg(address)
+        .arg(token)
+        .creation_flags(CREATE_NO_WINDOW)
+        .spawn()
+        .with_context(|| format!("failed to launch {}", executable.display()))?;
     Ok(())
 }
 
 #[cfg(not(windows))]
-fn launch_elevated(_executable: &Path, _address: &str, _token: &str) -> Result<()> {
-    bail!("administrator helper launch is Windows-only")
+fn launch_helper(_executable: &Path, _address: &str, _token: &str) -> Result<()> {
+    bail!("keyboard output helper launch is Windows-only")
 }

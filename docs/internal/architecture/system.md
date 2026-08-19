@@ -76,7 +76,8 @@ The CLI, Tauri UI, and MIDI runtime run at the invoking user's normal integrity
 level. Windows `SendInput` cannot target a process at a higher integrity level,
 so RISE and the CLI controller should normally run non-elevated together. The
 GUI can start a separate `piu-rise-output-helper` containing only the keyboard
-output boundary; that helper requests UAC elevation when live output starts.
+output boundary; that helper runs at the GUI user's integrity level without
+requesting UAC elevation.
 It accepts commands over a per-run loopback connection authenticated with an
 ephemeral token; disconnect and shutdown release all helper-owned active keys.
 MIDI and configuration inputs remain untrusted data.

@@ -32,8 +32,8 @@ Open `web/index.html` in a current browser to inspect the shared layout editor
 without installing anything. Browser mode uses a demo backend and never sends
 MIDI or keyboard output.
 
-The native host is an independent Tauri crate. On Windows, build its elevated
-keyboard-output helper and run the normal-privilege GUI with:
+The native host is an independent Tauri crate. On Windows, build its
+normal-privilege keyboard-output helper and run the normal-privilege GUI with:
 
 ```text
 just gui-dev

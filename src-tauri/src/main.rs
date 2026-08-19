@@ -225,7 +225,7 @@ fn start_controller(
         .lock()
         .map_err(|_| "status lock was poisoned")? = ControllerStatus {
         running: true,
-        output_elevated: true,
+        output_elevated: false,
         last_error: None,
     };
     *runtime = Some(RuntimeHandle {
