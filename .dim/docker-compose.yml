@@ -21,6 +21,7 @@ services:
       GIT_CONFIG_VALUE_1: /workspace
     volumes:
       - ..:/workspace
+      - agent-home:/home/dim-agent
       - agent-dind-shared:/mnt/workspace-shared-dind
       - /tmp/dim-controller-proxy:/run/dim/controller-proxy:ro
     networks:
@@ -50,6 +51,7 @@ services:
       - agent-dind
 
 volumes:
+  agent-home:
   agent-dind-data:
   agent-dind-shared:
 

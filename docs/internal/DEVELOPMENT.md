@@ -78,6 +78,11 @@ host or trusted-workspace Docker socket. This lets the agent build the Tauri
 check image without installing WebKitGTK or D-Bus packages on the host or in
 the ordinary agent image.
 
+The agent uses the project-owned `agent-home` volume at `/home/dim-agent` so
+tool configuration and caches survive agent service recreation. Normal DIM
+restart and workspace-container replacement preserve it through the outer
+workspace Docker volume; `.dim/teardown.sh` removes it on workspace discard.
+
 After registering this repository as a DIM project root, common commands are:
 
 ```sh

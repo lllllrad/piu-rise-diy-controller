@@ -16,5 +16,5 @@ esac
 exec docker compose --project-name "dim-${DIM_WORKSPACE_NAME}" \
     --file .dim/docker-compose.yml exec \
     --user "$(id -u):$(id -g)" \
-    --env HOME=/tmp/dim-agent-home \
+    --env HOME=/home/dim-agent \
     agent sh .dim/agent-entrypoint.sh "$task" "$@"
