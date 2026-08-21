@@ -20,7 +20,8 @@ external_url_ingress="${DIM_EXTERNAL_URL_INGRESS:-local-http}"
 
 if ! curl --fail --silent --unix-socket "$proxy_socket" \
     http://dim-controller/api/urls >/dev/null 2>&1; then
-    mkdir -p "$proxy_dir"
+    sudo install --directory \
+        --owner "$(id -u)" --group "$(id -g)" --mode 0755 "$proxy_dir"
     rm -f "$proxy_socket"
     dim-controller-proxy external-url \
         --listen "$proxy_socket" \
