@@ -49,5 +49,15 @@ process.stdin.on("end", () => {
     fi
 fi
 
-docker compose --project-name "dim-${DIM_WORKSPACE_NAME}" \
-    --file .dim/docker-compose.yml up --detach --build agent
+compose() {
+    docker compose --project-name "dim-${DIM_WORKSPACE_NAME}" \
+        --file .dim/docker-compose.yml "$@"
+}
+
+# An outer workspace stop terminates nested containers without letting their
+# daemon preserve a restartable process state. Recreate Project containers on
+# every setup while retaining their named data and home volumes.
+compose build agent agent-dind
+compose up --detach --force-recreate agent-dind agent
+compose exec --no-TTY agent \
+    chown -R "$(id -u):$(id -g)" /home/dim-agent
