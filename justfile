@@ -68,7 +68,7 @@ web-preview-external ingress="local-http":
     #!/usr/bin/env sh
     set -eu
     ingress={{quote(ingress)}}
-    socket="${DIM_CONTROLLER_SOCKET:-/run/dim/controller-proxy/external-url.sock}"
+    socket="${DIM_CONTROLLER_SOCKET:-/run/dim/dev-controller/controller.sock}"
     if [ ! -S "$socket" ]; then
         echo "DIM External URL proxy is unavailable; configure an ingress and rerun .dim/setup.sh." >&2
         exit 1

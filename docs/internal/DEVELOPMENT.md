@@ -100,9 +100,16 @@ dim run piu-rise-dev codex
 
 The exact DIM CLI version and host backend are managed by the DIM installation,
 not this repository. DIM is pre-stable software; pin and review the version at
-the host level. The agent image pins Rust 1.97 and Docker CLI/DinD 29.1.3.
+the host level. The agent image pins Rust 1.97, Node.js 24.6.0, just 1.42.4,
+and Docker CLI/DinD 29.1.3.
 `bootstrap` reports the preinstalled tool versions; it does not modify the
 host. `check-gui-container` uses the agent's private Docker daemon.
+
+The trusted workspace setup exposes only an ingress-restricted controller
+proxy at `/run/dim/dev-controller/controller.sock`. The same runtime directory
+is mounted read-only into the agent; the original workspace controller socket
+and grant are not passed through. `DIM_EXTERNAL_URL_INGRESS` selects the
+allowlisted ingress and defaults to `local-http`.
 
 The setup rewrites the checkout's `origin` to the routable
 `DIM_GIT_BASE_URL` supplied by DIM and passes that URL into the nested agent.

@@ -9,7 +9,8 @@ services:
       DIM_GIT_USERNAME: "${DIM_GIT_USERNAME:?}"
       DIM_GIT_TOKEN: "${DIM_GIT_TOKEN:?}"
       DIM_GIT_BASE_URL: "${DIM_GIT_BASE_URL:?}"
-      DIM_CONTROLLER_SOCKET: /run/dim/controller-proxy/external-url.sock
+      DIM_CONTROLLER_SOCKET: /run/dim/dev-controller/controller.sock
+      DIM_EXTERNAL_URL_INGRESS: "${DIM_EXTERNAL_URL_INGRESS:-local-http}"
       GIT_AUTHOR_NAME: "${GIT_AUTHOR_NAME:-}"
       GIT_AUTHOR_EMAIL: "${GIT_AUTHOR_EMAIL:-}"
       GIT_COMMITTER_NAME: "${GIT_COMMITTER_NAME:-}"
@@ -23,7 +24,7 @@ services:
       - ..:/workspace
       - agent-home:/home/dim-agent
       - agent-dind-shared:/mnt/workspace-shared-dind
-      - /tmp/dim-controller-proxy:/run/dim/controller-proxy:ro
+      - /run/dim/dev-controller:/run/dim/dev-controller:ro
     networks:
       - default
       - agent-dind

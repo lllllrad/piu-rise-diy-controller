@@ -33,6 +33,7 @@ case "$task" in
         rustc --version
         cargo --version
         node --version
+        just --version
         docker --version
         ;;
     doctor)
@@ -41,6 +42,7 @@ case "$task" in
         rustc --version
         cargo --version
         node --version
+        just --version
         docker --version
         docker info --format 'dind_server={{.ServerVersion}}'
         ;;
