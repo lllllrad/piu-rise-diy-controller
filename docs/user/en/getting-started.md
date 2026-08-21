@@ -33,8 +33,9 @@ when `just` is unavailable.
 
 In a DIM workspace with the External URLs plugin and a configured ingress,
 `just web-preview-external INGRESS` starts the browser preview in DIND and
-prints the externally reachable URL response. The ingress defaults to
-`local-http`. Run `just web-preview-external-stop` to stop its container.
+prints the externally reachable URL response. Use one of the host-approved
+ingress names exposed by the workspace. Run `just web-preview-external-stop`
+to stop its container.
 
 The GUI discovers and opens the two MIDI inputs itself; it does not invoke the
 CLI executable. The keyboard output helper also runs with normal privileges,

@@ -64,7 +64,7 @@ web-preview port="8000":
     node scripts/serve-web.mjs {{port}}
 
 # Start the browser preview in DIND and expose it through a DIM External URL ingress.
-web-preview-external ingress="local-http":
+web-preview-external ingress:
     #!/usr/bin/env sh
     set -eu
     ingress={{quote(ingress)}}

@@ -108,8 +108,9 @@ host. `check-gui-container` uses the agent's private Docker daemon.
 The trusted workspace setup exposes only an ingress-restricted controller
 proxy at `/run/dim/dev-controller/controller.sock`. The same runtime directory
 is mounted read-only into the agent; the original workspace controller socket
-and grant are not passed through. `DIM_EXTERNAL_URL_INGRESS` selects the
-allowlisted ingress and defaults to `local-http`.
+and grant are not passed through. Setup discovers the host-approved ingresses
+available to the workspace and allows all of them through the restricted
+proxy; all other controller capabilities remain unavailable to the agent.
 
 The setup rewrites the checkout's `origin` to the routable
 `DIM_GIT_BASE_URL` supplied by DIM and passes that URL into the nested agent.

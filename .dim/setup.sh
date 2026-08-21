@@ -16,18 +16,34 @@ git remote set-url origin "${DIM_GIT_BASE_URL:?DIM_GIT_BASE_URL is required}/$or
 proxy_dir="/run/dim/dev-controller"
 proxy_socket="$proxy_dir/controller.sock"
 proxy_log="$proxy_dir/external-url.log"
-external_url_ingress="${DIM_EXTERNAL_URL_INGRESS:-local-http}"
+
+discovery="$(dim external-url discover --json)"
+ingresses="$(printf '%s' "$discovery" | node -e '
+let input = "";
+process.stdin.on("data", chunk => input += chunk);
+process.stdin.on("end", () => {
+  for (const ingress of JSON.parse(input)) console.log(ingress.name);
+});
+')"
+if [ -z "$ingresses" ]; then
+    echo "No DIM External URL ingress is available to this workspace." >&2
+    exit 1
+fi
 
 if ! curl --fail --silent --unix-socket "$proxy_socket" \
     http://dim-controller/api/urls >/dev/null 2>&1; then
     sudo install --directory \
         --owner "$(id -u)" --group "$(id -g)" --mode 0755 "$proxy_dir"
     rm -f "$proxy_socket"
+    set --
+    for ingress in $ingresses; do
+        set -- "$@" --ingress "$ingress"
+    done
     dim-controller-proxy external-url \
         --listen "$proxy_socket" \
         --directory-mode 0755 \
         --socket-mode 0666 \
-        --ingress "$external_url_ingress" >"$proxy_log" 2>&1 &
+        "$@" >"$proxy_log" 2>&1 &
     for attempt in $(seq 1 30); do
         [ -S "$proxy_socket" ] && break
         if [ "$attempt" -eq 30 ]; then
