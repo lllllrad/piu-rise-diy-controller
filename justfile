@@ -77,7 +77,7 @@ web-preview-external ingress="local-http":
     curl --fail --silent --show-error \
         --unix-socket "$socket" \
         --header "Content-Type: application/json" \
-        --data "$(node -e 'process.stdout.write(JSON.stringify({ingress:process.argv[1],target:{containers:[\"agent-dind\",\"web-preview\"],port:80,protocol:\"http\"}}))' "$ingress")" \
+        --data "$(node -e 'process.stdout.write(JSON.stringify({ingress:process.argv[1],target:{containers:["agent-dind","web-preview"],port:80,protocol:"http"}}))' "$ingress")" \
         http://dim-controller/api/urls
 
 # Stop the DIND browser preview container. Existing External URLs remain revocable through DIM.

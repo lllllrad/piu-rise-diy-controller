@@ -20,7 +20,7 @@ RUN apt-get update \
         libasound2-dev \
         pkg-config \
         tini \
-    && cargo install just --locked --version "${JUST_VERSION}" \
+    && cargo install just --locked --version "${JUST_VERSION}" --root /usr/local \
     && npm install --global @openai/codex @anthropic-ai/claude-code \
     && install --directory --mode 0755 \
         --owner "${DIM_AGENT_UID}" --group "${DIM_AGENT_GID}" /home/dim-agent \
