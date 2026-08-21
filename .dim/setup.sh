@@ -17,13 +17,17 @@ proxy_dir="/run/dim/dev-controller"
 proxy_socket="$proxy_dir/controller.sock"
 proxy_log="$proxy_dir/external-url.log"
 
-discovery="$(dim external-url discover --json)"
-ingresses="$(printf '%s' "$discovery" | node -e '
-let input = "";
-process.stdin.on("data", chunk => input += chunk);
-process.stdin.on("end", () => {
-  for (const ingress of JSON.parse(input)) console.log(ingress.name);
-});
+: "${DIM_CONTROLLER_SOCKET:?DIM_CONTROLLER_SOCKET is required}"
+: "${DIM_CONTROLLER_TOKEN:?DIM_CONTROLLER_TOKEN is required}"
+discovery="$(curl --fail --silent --show-error \
+    --unix-socket "$DIM_CONTROLLER_SOCKET" \
+    --header "Authorization: Bearer $DIM_CONTROLLER_TOKEN" \
+    http://dim-controller/api)"
+ingresses="$(printf '%s' "$discovery" | jq -r '
+    .routes
+    | map(select(.path == "/api/urls"))
+    | first
+    | .discovery.ingresses[]?.name
 ')"
 if [ -z "$ingresses" ]; then
     echo "No DIM External URL ingress is available to this workspace." >&2
